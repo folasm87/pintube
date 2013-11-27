@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 .DS_Store
 .AppleDouble
 .LSOverride
@@ -15,11 +16,14 @@ Icon
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
+=======
+>>>>>>> 5074cc39d68c6ef998c5ab09a504fbe9d5dda673
 *.py[cod]
 
 # C extensions
 *.so
 
+<<<<<<< HEAD
 # Distribution / packaging
 bin/
 build/
@@ -34,15 +38,38 @@ var/
 *.egg-info/
 .installed.cfg
 *.egg
+=======
+# Packages
+*.egg
+*.egg-info
+dist
+build
+eggs
+parts
+bin
+var
+sdist
+develop-eggs
+.installed.cfg
+lib
+lib64
+__pycache__
+>>>>>>> 5074cc39d68c6ef998c5ab09a504fbe9d5dda673
 
 # Installer logs
 pip-log.txt
 
 # Unit test / coverage reports
+<<<<<<< HEAD
 .tox/
 .coverage
 nosetests.xml
 coverage.xml
+=======
+.coverage
+.tox
+nosetests.xml
+>>>>>>> 5074cc39d68c6ef998c5ab09a504fbe9d5dda673
 
 # Translations
 *.mo
@@ -50,4 +77,23 @@ coverage.xml
 # Mr Developer
 .mr.developer.cfg
 .project
+<<<<<<< HEAD
 .pydevproject
+=======
+.pydevproject
+
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Icon must ends with two \r.
+Icon
+
+
+# Thumbnails
+._*
+
+# Files that might appear on external disk
+.Spotlight-V100
+.Trashes
+>>>>>>> 5074cc39d68c6ef998c5ab09a504fbe9d5dda673
