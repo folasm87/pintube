@@ -1,13 +1,20 @@
 import xml.etree.ElementTree as ET
+#import pinboard
+from pinboard import open
+from functools import wraps
+from basicauth import encode
+import urllib2
 import httplib2
 import os
 import sys
 import re
-import pinboard
+
+
 
 from pintube import app
 from rauth.service import OAuth1Service, OAuth1Session
 from flask_oauth import OAuth
+#from flask.ext.rauth import RauthOAuth2
 from flask import Flask
 from flask import request
 from flask import session
@@ -20,7 +27,10 @@ from flask import flash
 from flask import session
 from flask import Response
 from flask import jsonify
+from flask.ext.login import login_user, logout_user, current_user, login_required
 
+
+from forms import LoginForm
 from apiclient.discovery import build
 from oauth2client.file import Storage
 from oauth2client.client import flow_from_clientsecrets
@@ -96,63 +106,52 @@ def insert_playlist():
 
     print "New playlist id: %s" % playlists_insert_response["id"]
 
+video_pattern = '\bwatch\b'
+playlist_pattern = '\bplaylist\b'
+channel_pattern = '\buser\b'
 
-def get_pinboard(username, password):
-    return pinboard.open(username, password)
+pinboard_data = {}
+
+def test_pinboard(user, passw):
+    
+    user = '' + user
+    passw = '' + passw
+    #p = pinboard(open(username=user, password=passw, token=None))
+   
+    
+    try:
+        #p = pinboard
+        #p.open(username=user, password=passw, token=None)
+        p = open()
+        encoded_string = encode(user, passw)
+        #p(username=user, password=passw)
+        p(encoded_string)
+        #p = pinboard(open(username=user, password=passw, token=None))
+    except urllib2.HTTPError, error:
+        print error
+        return False
+    
+    return True 
     
 
+def get_pintubes(username, password):
+    videos = []
+    playlists = []
+    channels = []
+    pintubes = {}
+    p = pinboard.open(username, password)
+    posts = p.posts(tag="youtube", count = 400)
+    for post in posts:
+        url = post[u'href']
+        if re.search(video_patten, url):
+            videos.append(url)
+        elif re.search(playlist_pattern, url):
+            playlists.append(url)
+        elif re.search(channel_pattern, url):
+            channels.append(url)
+              
+    return {"videos": videos, "playlists": playlists, "channels": channels}
 
-"""
-
-oauth = OAuth()
-
-
-youtube = oauth.remote_app(
-    base_url = ''
-)
-
-
-goodreads = oauth.remote_app('goodreads',
-    base_url = 'http://www.goodreads.com/',
-    request_token_url='http://www.goodreads.com/oauth/request_token',
-    access_token_url='http://www.goodreads.com/oauth/access_token',
-    authorize_url='http://www.goodreads.com/oauth/authorize',
-    consumer_key=CONSUMER_KEY,
-    consumer_secret=CONSUMER_SECRET
-)
-
-
-
-goodreads = OAuth1Service(
-    consumer_key=CONSUMER_KEY,
-    consumer_secret=CONSUMER_SECRET,
-    name='goodreads',
-    request_token_url='http://www.goodreads.com/oauth/request_token',
-    authorize_url='http://www.goodreads.com/oauth/authorize',
-    access_token_url='http://www.goodreads.com/oauth/access_token',
-    base_url='http://www.goodreads.com/'
-    )
-    
-
-
-@app.route('/oauth-authorized')
-@goodreads.authorized_handler
-def oauth_authorized(resp):
-    next_url = request.args.get('next') or url_for('index')
-    if resp is None:
-        flash(u'You denied the request to sign in.')
-        return redirect(next_url)
-
-    session['goodreads_token'] = (
-        resp['oauth_token'],
-        resp['oauth_token_secret']
-    )
-    session['goodreads_user'] = resp['screen_name']
-
-    flash('You were signed in as %s' % resp['screen_name'])
-    return redirect(next_url)
-
-"""
 
 @app.route('/')
 @app.route('/index')
@@ -165,10 +164,27 @@ def oauth():
         insert_playlist()
         
     
-
 @app.route('/oauth2callback/')
 @app.route('/oauth2callback')
 def oauth2callback():
     return get_authenticated_service(has_youtube)
     #return pintube.authorize(callback=url_for('oauth_authorized',
         #next=request.args.get('next') or request.referrer or None))
+        
+@app.route('/pinboard', methods = ['GET', 'POST'])
+def pinboard():
+    form = LoginForm()
+    print "Success 1"
+    if form.validate_on_submit():
+        session['remember_me'] = form.remember_me.data
+        print "Success 2"
+        if test_pinboard(form.user_id.data, form.password.data):
+            pinboard_data = get_pintubes(form.user_id.data, form.password.data)
+            print "Success 3"
+            return redirect(url_for('index'))
+        else:
+            print "Failure 1"
+            return redirect(url_for('pinboard'))
+        #flash('Login requested for Pinboard with UserID="' + form.user_id.data + '", remember_me=' + str(form.remember_me.data))
+        #return redirect('/index')
+    return render_template('pinboard.html', title = 'Sign In', form = form)
