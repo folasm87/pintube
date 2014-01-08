@@ -11,7 +11,7 @@
 			<p>
 				Please enter your User ID:
 				<br>
-				{{form.user_id(size=40, placeholder="User ID")}}
+				{{form.pin_user_id(size=40, placeholder="User ID")}}
 				<br>
 				{% for error in form.errors.user_id %}
 				<span style="color: red;">[{{error}}]</span>
@@ -21,11 +21,11 @@
 			<p>
 				Please enter your Password:
 				<br>
-				{{form.password(size=40, placeholder="Password")}}
+				{{form.pin_password(size=40, placeholder="Password")}}
 				<br>
 			</p>
 			<p>
-				{{form.remember_me}} Remember Me
+				{{form.pin_remember_me}} Remember Me
 			</p>
 			<p>
 				<input class="btn btn-lg btn-primary btn-block" type="submit" value="Sign In">

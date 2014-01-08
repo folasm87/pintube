@@ -38,16 +38,16 @@
 </li>
 {% if not LOGGED_IN_YT %}
 <li>
-<a href="{{ url_for('oauth2callback') }}">Log in to Youtube</a>
+<a href="{{ url_for('youtube_login') }}">Login to Youtube</a>
 </li>
 {% else %}
 <li>
-<a href="{{ url_for('oauth2callback') }}">Logout of Youtube</a>
+<a href="{{ url_for('youtube_login') }}">Logout of Youtube</a>
 </li>
 {% endif %}
 {% if not LOGGED_IN_PINBOARD %}
 <li>
-	<a href="{{ url_for('pinboard') }}">Log in to Pinboard</a>
+	<a href="{{ url_for('pinboard_login') }}">Log in to Pinboard</a>
 </li>
 
 {% endif %}
