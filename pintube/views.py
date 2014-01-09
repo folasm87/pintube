@@ -1,10 +1,11 @@
 import xml.etree.ElementTree as ET
 import pinboard
-import gdata.youtube
+import gdata
+from gdata import youtube
 import gdata.youtube.service
-import gdata.apps
-import gdata.client
-import gdata.gauth
+from gdata import apps
+from gdata import client
+from gdata import gauth
 
 # from pinboard import open
 from functools import wraps
@@ -212,27 +213,49 @@ def test_pinboard(user, passw):
     
     return True 
     
-video_pattern = '\bwatch\b'
-playlist_pattern = '\bplaylist\b'
-channel_pattern = '\buser\b'
+video_pattern = '(watch+\Wv\W)'
+playlist_pattern = '(playlist+\Wlist=)'
+channel_pattern = '(user/)'
+#tag_pattern = re.compile(r"[^u\W]")
 pinboard_data = {}
 
 def get_pintubes(username, password):
     videos = []
     playlists = []
     channels = []
+    tags_for_vids = {}
     pintubes = {}
     p = pinboard.open(username, password)
-    posts = p.posts(tag="youtube", count=400)
+    #print p 
+    posts = p.posts(tag="youtube", count=1000)
+    #print posts
     for post in posts:
         url = post[u'href']
+        tags = post[u'tags']
         if re.search(video_pattern, url):
             videos.append(url)
+            for tag in tags:
+                tag = str(tag)
+                if tag in tags_for_vids:
+                    tags_for_vids[tag].append(url)
+                else:
+                    tags_for_vids.setdefault(tag, [url])
         elif re.search(playlist_pattern, url):
             playlists.append(url)
         elif re.search(channel_pattern, url):
             channels.append(url)
-              
+    
+    print 'Videos :- [%s]' % ', '.join(map(str, videos))
+    print 'Channels :- [%s]' % ', '.join(map(str, channels))
+    print 'Playlists :- [%s]' % ', '.join(map(str, playlists))
+    print '-*' * 50
+    
+    for vid_tag in tags_for_vids:
+        print "%s :-> [%s]" % (vid_tag, ', '.join(map(str, tags_for_vids[vid_tag])))
+        
+    
+
+    print "Get_Pintube has run again"
     return {"videos": videos, "playlists": playlists, "channels": channels}
 
 def test_youtube(username, password):
@@ -309,10 +332,21 @@ def youtube_login():
 @app.route('/')
 @app.route('/index')
 def index():
-    parameters = cgi.FieldStorage()
-    authsub_token = parameters.getvalue('token')#["token"]
-    print "Token is: %s"%(authsub_token)
-    print "Token 123"
+    #parameters = cgi.FieldStorage()
+    #authsub_token = parameters.getvalue('token')#["token"]
+    #print "Token is: %s"%(authsub_token)
+    
+    if "token" in request.args:
+        authsub_token = request.args.get("token")
+        print "Token is: %s"%(authsub_token)
+        youtube_service.SetAuthSubToken(authsub_token)
+        youtube_service.UpgradeToSessionToken()
+        print "Youtube Session Authorized"
+    else:
+        print "No token"
+    
+    
+    
     """
     if "token" not in parameters:
         print "Token not here"

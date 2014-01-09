@@ -20,65 +20,68 @@
 	<![endif]-->
 </head>
 <body>
-<div class="navbar navbar-inverse navbar-fixed-top">
-<div class="container">
-<div class="navbar-header">
-<button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
-<span class="icon-bar"></span>
-<span class="icon-bar"></span>
-<span class="icon-bar"></span>
-<span class="icon-bar"></span>
-</button>
-<a class="navbar-brand" href="{{ url_for('index') }}">Pintube</a>
-</div>
-<div class="collapse navbar-collapse">
-<ul class="nav navbar-nav navbar-right">
-<li class="active">
-<a href="{{ url_for('index') }}">Home</a>
-</li>
-{% if not LOGGED_IN_YT %}
-<li>
-<a href="{{ url_for('youtube_login') }}">Login to Youtube</a>
-</li>
-{% else %}
-<li>
-<a href="{{ url_for('youtube_login') }}">Logout of Youtube</a>
-</li>
-{% endif %}
-{% if not LOGGED_IN_PINBOARD %}
-<li>
-	<a href="{{ url_for('pinboard_login') }}">Log in to Pinboard</a>
-</li>
+	<div class="navbar navbar-inverse navbar-fixed-top">
+		<div class="container">
+			<div class="navbar-header">
+				<button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+					<span class="icon-bar"></span>
+					<span class="icon-bar"></span>
+					<span class="icon-bar"></span>
+					<span class="icon-bar"></span>
+				</button>
+				<a class="navbar-brand" href="{{ url_for('index') }}">Pintube</a>
+			</div>
+			<div class="collapse navbar-collapse">
+				<ul class="nav navbar-nav navbar-right">
+					<li class="active">
+						<a href="{{ url_for('index') }}">Home</a>
+					</li>
+					{% if not LOGGED_IN_YT %}
+					<li>
+						<a href="{{ url_for('youtube_login') }}">Login to Youtube</a>
+					</li>
+					<!--
+					{% else %}
+					<li>
+						<a href="{{ url_for('youtube_login') }}">Logout of Youtube</a>
+					</li>
+					{% endif %}
+					-->
+					{% if not LOGGED_IN_PINBOARD %}
+					<li>
+						<a href="{{ url_for('pinboard_login') }}">Log in to Pinboard</a>
+					</li>
 
-{% endif %}
-<li>
-	<a href="#about">About</a>
-</li>
-<li>
-	<a href="#contact">Contact</a>
-</li>
-</ul>
-</div><!--/.nav-collapse -->
-</div>
-</div>
-
-<hr>
-<div class="jumbotron">
-	<div><!-- class="container" -->
-		{% with messages = get_flashed_messages() %}
-		{% if messages %}
-		<ul>
-			{% for message in messages %}
-			<li>
-				{{ message }}
-			</li>
-			{% endfor %}
-		</ul>
-		{% endif %}
-		{% endwith %}
-		{% block content %}
-		{% endblock %}
+					{% endif %}
+					<li>
+						<a href="#about">About</a>
+					</li>
+					<li>
+						<a href="#contact">Contact</a>
+					</li>
+				</ul>
+			</div><!--/.nav-collapse -->
+		</div>
 	</div>
-</div>
+
+	
+	<div class="jumbotron">
+		<div>
+			<!-- class="container" -->
+			{% with messages = get_flashed_messages() %}
+			{% if messages %}
+			<ul>
+				{% for message in messages %}
+				<li>
+					{{ message }}
+				</li>
+				{% endfor %}
+			</ul>
+			{% endif %}
+			{% endwith %}
+			{% block content %}
+			{% endblock %}
+		</div>
+	</div>
 </body>
 </html>
