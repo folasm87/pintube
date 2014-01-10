@@ -107,7 +107,10 @@ YOUTUBE_API_SERVICE_NAME = "youtube"
 YOUTUBE_API_VERSION = "v3"
 
 
-has_youtube = False
+#global has_youtube
+#global has_pinboard
+
+has_youtube= False
 has_pinboard = False
 
 def get_authenticated_service():
@@ -216,7 +219,6 @@ def test_pinboard(user, passw):
 video_pattern = '(watch+\Wv\W)'
 playlist_pattern = '(playlist+\Wlist=)'
 channel_pattern = '(user/)'
-#tag_pattern = re.compile(r"[^u\W]")
 pinboard_data = {}
 
 def get_pintubes(username, password):
@@ -256,31 +258,19 @@ def get_pintubes(username, password):
     
 
     print "Get_Pintube has run again"
-    return {"videos": videos, "playlists": playlists, "channels": channels}
+    return {"videos": videos, "playlists": playlists, "channels": channels, "vid_tags": tags_for_vids}
 
-def test_youtube(username, password):
-    
-    yt_service.email = 'jo@gmail.com'
-    yt_service.password = 'mypassword'
-    yt_service.ProgrammaticLogin()
 
 @app.route('/oauth')
 def oauth():
     if not has_playlist():
         insert_playlist()
-        
-"""  
-@app.route('/oauth2callback/')
-@app.route('/oauth2callback')
-def oauth2callback():
-    return get_authenticated_service()
-    # return pintube.authorize(callback=url_for('oauth_authorized',
-        # next=request.args.get('next') or request.referrer or None))
-"""        
+           
         
 @app.route('/pinboard', methods=['GET', 'POST'])
 def pinboard_login():
     form = Pinboard_Login_Form()
+    global has_pinboard
     print "Success 1"
     if form.validate_on_submit():
         session['pin_remember_me'] = form.pin_remember_me.data
@@ -288,6 +278,7 @@ def pinboard_login():
         if test_pinboard(form.pin_user_id.data, form.pin_password.data):
             pinboard_data = get_pintubes(form.pin_user_id.data, form.pin_password.data)
             print "Success 3"
+            has_pinboard = True
             return redirect(url_for('index'))
         else:
             print "Failure 1"
@@ -301,33 +292,6 @@ def youtube_login():
     authSubUrl = GetAuthSubUrl()
     print 'URL is: %s' % authSubUrl
     return redirect(authSubUrl)
-    '''
-    form = Youtube_Login_Form()
-    print "YT 1"
-    if form.validate_on_submit():
-        session['yt_remember_me'] = form.yt_remember_me.data
-        print "YT 2"
-        
-        print "YT Success | Mission Accomplished!"
-        
-        
-        if test_pinboard(form.yt_user_id.data, form.yt_password.data):
-        pinboard_data = get_pintubes(form.yt_user_id.data, form.yt_password.data)
-        print "YT 3"
-        
-        if request.method == 'GET':
-            token = request.args.get('token')
-            print token 
-        
-        return redirect(url_for('index'))
-        
-    else:
-        print "Fail YT 1"
-        return redirect(url_for('index'))
-        # flash('Login requested for Pinboard with UserID="' + form.user_id.data + '", remember_me=' + str(form.remember_me.data))
-        # return redirect('/index')
-    '''
-    #return render_template('youtube_login.html', title='Sign In', form=form)
 
 @app.route('/')
 @app.route('/index')
@@ -335,17 +299,55 @@ def index():
     #parameters = cgi.FieldStorage()
     #authsub_token = parameters.getvalue('token')#["token"]
     #print "Token is: %s"%(authsub_token)
-    
+    global has_youtube
     if "token" in request.args:
         authsub_token = request.args.get("token")
         print "Token is: %s"%(authsub_token)
         youtube_service.SetAuthSubToken(authsub_token)
         youtube_service.UpgradeToSessionToken()
         print "Youtube Session Authorized"
+        has_youtube = True
     else:
         print "No token"
     
-    
+    if has_youtube and has_pinboard:
+        
+        
+        
+        
+        your_playlists = {}
+        playlist_feed = youtube_service.GetYouTubePlaylistFeed(username='default')
+        for playlist_entry in playlist_feed.entry:
+           
+            playlist_entry_title = playlist_entry.title.text
+            playlist_entry_uri = playlist_entry.id.text#.replace('PL', '')
+            playlist_entry_video_feed = youtube_service.GetYouTubePlaylistVideoFeed(uri=playlist_entry_uri)
+            
+            #if playlist_entry_title not in pinboard_data["playlists"]:
+            
+            print "%s: %s" % (playlist_entry_title, playlist_entry_uri)
+            
+            your_playlists.setdefault(playlist_entry_title)
+            
+            for playlist_video_entry in playlist_entry_video_feed.entry:
+                
+            #if playlist_entry.title.text in pinboard_data['playlists']:
+        
+        
+        for tag in pinboard_data["vid_tags"].keys():
+            #Adding playlist according to tag if not already present
+            if tag not in your_playlists:
+                new_public_playlistentry = youtube_service.AddPlaylist(tag, 'A Pintube Playlist')
+                
+                if isinstance(new_public_playlistentry, gdata.youtube.YouTubePlaylistEntry):
+                  print 'New playlist added'
+            #If playlist already present check to see if you should update
+            else:
+                for vid in pinboard_data["vid_tags"][tag]:
+                    if vid in 
+                
+            
+        
     
     """
     if "token" not in parameters:
