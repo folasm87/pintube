@@ -240,7 +240,7 @@ def get_pintubes(username, password):
                 tag = str(tag)
                 if tag in tags_for_vids:
                     tags_for_vids[tag].append(url)
-                else:
+                elif tag != "youtube":
                     tags_for_vids.setdefault(tag, [url])
         elif re.search(playlist_pattern, url):
             playlists.append(url)
@@ -307,45 +307,77 @@ def index():
         youtube_service.UpgradeToSessionToken()
         print "Youtube Session Authorized"
         has_youtube = True
-    else:
-        print "No token"
+        
+        print "has_youtube is %s and has_pinboard is %s" % (has_youtube, has_pinboard)
     
     if has_youtube and has_pinboard:
-        
-        
-        
-        
-        your_playlists = {}
+        your_playlists = {} 
         playlist_feed = youtube_service.GetYouTubePlaylistFeed(username='default')
+        
+        #Copies the playlist Names, URIs and Videos to a dictionary
+        print "Beginning Playlist process"
         for playlist_entry in playlist_feed.entry:
            
             playlist_entry_title = playlist_entry.title.text
-            playlist_entry_uri = playlist_entry.id.text#.replace('PL', '')
+            playlist_entry_uri = playlist_entry.id.text.replace('PL', '')
             playlist_entry_video_feed = youtube_service.GetYouTubePlaylistVideoFeed(uri=playlist_entry_uri)
             
             #if playlist_entry_title not in pinboard_data["playlists"]:
-            
+            print "Part 1"
             print "%s: %s" % (playlist_entry_title, playlist_entry_uri)
             
-            your_playlists.setdefault(playlist_entry_title)
+            your_playlists.setdefault(playlist_entry_title, [playlist_entry_uri, []])
             
             for playlist_video_entry in playlist_entry_video_feed.entry:
+                print "Part 2"
+                video_title = playlist_video_entry.title.text
+                #your_playlists[playlist_entry_title].append(playlist_video_entry.title.text)
+                your_playlists[playlist_entry_title][1].append(playlist_video_entry.title.text)
                 
             #if playlist_entry.title.text in pinboard_data['playlists']:
         
-        
+        #Checks to see if videos are in playlists that correspond to their tags on Pinboard
         for tag in pinboard_data["vid_tags"].keys():
+            print "Part 3"
             #Adding playlist according to tag if not already present
             if tag not in your_playlists:
+                print "Part 4"
                 new_public_playlistentry = youtube_service.AddPlaylist(tag, 'A Pintube Playlist')
                 
                 if isinstance(new_public_playlistentry, gdata.youtube.YouTubePlaylistEntry):
-                  print 'New playlist added'
+                  print 'New playlist %s added!' % tag
             #If playlist already present check to see if you should update
             else:
-                for vid in pinboard_data["vid_tags"][tag]:
-                    if vid in 
                 
+                for vid in pinboard_data["vid_tags"][tag]:
+                    """
+                    A video is missing from an already created playlist
+                    
+                    In order to 
+                    
+                    https://stackoverflow.com/questions/3652046/c-sharp-regex-to-get-video-id-from-youtube-and-vimeo-by-url
+                    
+                    https://developers.google.com/youtube/1.0/developers_guide_python#AddVideoToPlaylist
+                    """
+                    
+                    if vid not in your_playlists[tag][1]:
+                        print "Part 5"
+                        vid_id_pattern = r"""youtu(?:\.be|be\.com)/(?:.*v(?:/|=)|(?:.*/)?)([a-zA-Z0-9-_]+)"""
+                        vid_id = re.search(vid_id_pattern, vid).group(1)
+                        entry = youtube_service.GetYouTubeVideoEntry(video_id=vid_id)
+                        
+                        playlist_uri = your_playlists[tag][0]
+                        
+                        playlist_video_entry = youtube_service.AddPlaylistVideoEntryToPlaylist(
+                            playlist_uri, vid_id)
+                        
+                        if isinstance(playlist_video_entry, gdata.youtube.YouTubePlaylistVideoEntry):
+                            print 'Video: %s added to Playlist: %s ' % (entry.title.text, tag)
+                
+            
+    
+    
+    
             
         
     
