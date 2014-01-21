@@ -1,5 +1,7 @@
 import xml.etree.ElementTree as ET
+
 import pinboard
+
 import gdata
 from gdata import youtube
 import gdata.youtube.service
@@ -10,11 +12,14 @@ from gdata import gauth
 # from pinboard import open
 from functools import wraps
 from basicauth import encode
+import urllib
 import urllib2
 import httplib2
+import requests
 import os
 import sys
 import re
+import cPickle as pickle
 #import forms
 import cgi, cgitb
 
@@ -101,10 +106,7 @@ https://developers.google.com/api-client-library/python/guide/aaa_client_secrets
 
 
 
-# An OAuth 2 access scope that allows for full read/write access.
-YOUTUBE_READ_WRITE_SCOPE = "https://www.googleapis.com/auth/youtube"
-YOUTUBE_API_SERVICE_NAME = "youtube"
-YOUTUBE_API_VERSION = "v3"
+
 
 
 #global has_youtube
@@ -112,9 +114,16 @@ YOUTUBE_API_VERSION = "v3"
 
 has_youtube= False
 has_pinboard = False
+authsub_token = ''
+"""
+
+# An OAuth 2 access scope that allows for full read/write access.
+YOUTUBE_READ_WRITE_SCOPE = "https://www.googleapis.com/auth/youtube"
+YOUTUBE_API_SERVICE_NAME = "youtube"
+YOUTUBE_API_VERSION = "v3"
 
 def get_authenticated_service():
-    """
+    
     flow = flow_from_clientsecrets(CLIENT_SECRETS_FILE,
     message=MISSING_CLIENT_SECRETS_MESSAGE,
     scope=YOUTUBE_READ_WRITE_SCOPE)
@@ -129,7 +138,7 @@ def get_authenticated_service():
     http=credentials.authorize(httplib2.Http()))
     
     is_authenticated = True
-    """
+    
     
     SCOPE = 'https://gdata.youtube.com/feeds/api'
     
@@ -163,7 +172,7 @@ def get_authenticated_service():
                                                 auth_token=auth2token)
     
     auth2token.authorize(client)
-    
+"""
 
 def has_playlist(username):
     url = "http://gdata.youtube.com/feeds/api/users/"
@@ -271,6 +280,7 @@ def oauth():
 def pinboard_login():
     form = Pinboard_Login_Form()
     global has_pinboard
+    global pinboard_data
     print "Success 1"
     if form.validate_on_submit():
         session['pin_remember_me'] = form.pin_remember_me.data
@@ -300,6 +310,7 @@ def index():
     #authsub_token = parameters.getvalue('token')#["token"]
     #print "Token is: %s"%(authsub_token)
     global has_youtube
+    global authsub_token
     if "token" in request.args:
         authsub_token = request.args.get("token")
         print "Token is: %s"%(authsub_token)
@@ -314,19 +325,45 @@ def index():
         your_playlists = {} 
         playlist_feed = youtube_service.GetYouTubePlaylistFeed(username='default')
         
+        
+        fo = open('playlist_feed.p', 'wb')
+        pickle.dump(playlist_feed, fo)
+        fo.close()
+        
         #Copies the playlist Names, URIs and Videos to a dictionary
         print "Beginning Playlist process"
         for playlist_entry in playlist_feed.entry:
            
             playlist_entry_title = playlist_entry.title.text
-            playlist_entry_uri = playlist_entry.id.text.replace('PL', '')
-            playlist_entry_video_feed = youtube_service.GetYouTubePlaylistVideoFeed(uri=playlist_entry_uri)
+            playlist_entry_uri = playlist_entry.id.text.split('/')[-1]
+            #playlist_content = playlist_entry.content
+            playlist_id = playlist_entry.id.text
+            playlist_entry_id = playlist_entry.id.text.split('/')[-1]
+            playlist_entry_video_feed = youtube_service.GetYouTubePlaylistVideoFeed(playlist_id=playlist_entry_id)
+            """
+            
+            requestURL = "https://gdata.youtube.com/feeds/api/users/default/playlists?v=2&token=%s" % authsub_token
+            root = ET.parse(urllib.urlopen(requestURL)).getroot()
+            print "=" * 100
+            print "This is the XML"
+            print root
+            print '\n'
+            print "=" * 100
+            
+            
+            tree = ET.parse('playlist_content')
+            root = tree.getroot()
+            print root[2][0].text
+            print root[2][1].text
+            """
             
             #if playlist_entry_title not in pinboard_data["playlists"]:
             print "Part 1"
-            print "%s: %s" % (playlist_entry_title, playlist_entry_uri)
-            
-            your_playlists.setdefault(playlist_entry_title, [playlist_entry_uri, []])
+            #print "Playlist Content: %s" % playlist_content
+            print "Playlist Entry Id : %s" % playlist_entry_id
+            #print "%s: %s" % (playlist_entry_title, playlist_entry_uri)
+            #print "playlist_entry_video_feed: %s" % playlist_entry_video_feed
+            your_playlists.setdefault(playlist_entry_title, [playlist_entry_id, []])
             
             for playlist_video_entry in playlist_entry_video_feed.entry:
                 print "Part 2"
@@ -337,7 +374,10 @@ def index():
             #if playlist_entry.title.text in pinboard_data['playlists']:
         
         #Checks to see if videos are in playlists that correspond to their tags on Pinboard
+        print "Pinboard_Data is %s" % pinboard_data
+        print "Pinboard_Data Vid_Tags are %s" % pinboard_data["vid_tags"]
         for tag in pinboard_data["vid_tags"].keys():
+        #for tag in pinboard_data["vid_tags"]["tags_for_vids"].keys():
             print "Part 3"
             #Adding playlist according to tag if not already present
             if tag not in your_playlists:
@@ -349,6 +389,7 @@ def index():
             #If playlist already present check to see if you should update
             else:
                 
+                print "Your already have a playlist named %s" % tag
                 for vid in pinboard_data["vid_tags"][tag]:
                     """
                     A video is missing from an already created playlist
@@ -359,20 +400,50 @@ def index():
                     
                     https://developers.google.com/youtube/1.0/developers_guide_python#AddVideoToPlaylist
                     """
-                    
+                    vid = str(vid)
                     if vid not in your_playlists[tag][1]:
                         print "Part 5"
                         vid_id_pattern = r"""youtu(?:\.be|be\.com)/(?:.*v(?:/|=)|(?:.*/)?)([a-zA-Z0-9-_]+)"""
                         vid_id = re.search(vid_id_pattern, vid).group(1)
                         entry = youtube_service.GetYouTubeVideoEntry(video_id=vid_id)
                         
-                        playlist_uri = your_playlists[tag][0]
+                        playlist_id = your_playlists[tag][0].replace('PL', '')
                         
-                        playlist_video_entry = youtube_service.AddPlaylistVideoEntryToPlaylist(
-                            playlist_uri, vid_id)
                         
-                        if isinstance(playlist_video_entry, gdata.youtube.YouTubePlaylistVideoEntry):
-                            print 'Video: %s added to Playlist: %s ' % (entry.title.text, tag)
+                        print "Video: %s is not in Playlist %s" % (vid, your_playlists[tag])
+                        print "Playlist id is %s, Video id is %s" % (playlist_id, vid_id)
+                        
+                        url = 'https://gdata.youtube.com/feeds/api/playlists/%s?v=2' % playlist_id
+                        
+                        print "URL is %s" % url
+                        
+                        headers = {'Content-Type' : 'application/atom+xml',
+                                   'Authorization' : 'Bearer %s' % authsub_token,
+                                   'GData-Version' : '2',
+                                   'X-GData-Key' : '%s' % youtube_service.developer_key}
+                        
+                        xml = """<?xml version="1.0" encoding="UTF-8"?><entry xmlns="http://www.w3.org/2005/Atom" xmlns:yt="http://gdata.youtube.com/schemas/2007"><id>%s</id><yt:position>1</yt:position></entry>""" % (vid_id)
+                        
+                        params = {'key': youtube_service.developer_key}
+                        
+                        print "XML is %s" % xml
+                        
+                        post = youtube_service.Post(xml, url, headers, url_params=params)
+                        
+                        #data = urllib.urlencode(values)
+                        #req = urllib2.Request(url, data)
+                        #response = urllib2.urlopen(req)
+                        #the_page = response.read()
+                        
+                        #playlist_video_entry = youtube_service.AddPlaylistVideoEntryToPlaylist(
+                           # playlist_uri, vid_id)
+                        
+                        r = requests.post(url, data=xml, headers=headers)
+                        
+                        r
+                        
+                        #if isinstance(playlist_video_entry, gdata.youtube.YouTubePlaylistVideoEntry):
+                            #print 'Video: %s added to Playlist: %s ' % (entry.title.text, tag)
                 
             
     
