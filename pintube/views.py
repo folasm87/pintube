@@ -1,17 +1,5 @@
 import xml.etree.ElementTree as ET
-
 import pinboard
-
-import gdata
-from gdata import youtube
-import gdata.youtube.service
-from gdata import apps
-from gdata import client
-from gdata import gauth
-
-# from pinboard import open
-from functools import wraps
-from basicauth import encode
 import urllib
 import urllib2
 import httplib2
@@ -20,13 +8,26 @@ import os
 import sys
 import re
 import cPickle as pickle
+
+
+import gdata
+import gdata.youtube.service
+from gdata import youtube
+from gdata import apps
+from gdata import client
+from gdata import gauth
+
+# from pinboard import open
+from functools import wraps
+from basicauth import encode
+
 #import forms
-import cgi, cgitb
+#import cgi, cgitb
 
 
-from pintube import app
-from rauth.service import OAuth1Service, OAuth1Session
-from flask_oauth import OAuth
+
+#from rauth.service import OAuth1Service, OAuth1Session
+#from flask_oauth import OAuth
 # from flask.ext.rauth import RauthOAuth2
 from flask import Flask
 from flask import request
@@ -43,6 +44,7 @@ from flask import jsonify
 from flask.ext.login import login_user, logout_user, current_user, login_required
 
 
+from pintube import app
 from forms import Youtube_Login_Form, Pinboard_Login_Form 
 from apiclient.discovery import build
 from oauth2client.file import Storage
@@ -72,107 +74,12 @@ def GetAuthSubUrl():
     return youtube_service.GenerateAuthSubURL(next, scope, secure, session)
 
 
-"""
-authSubUrl = GetAuthSubUrl()
-print 'URL is: %s' % authSubUrl
-parameters = cgi.FieldStorage()
-#authsub_token = parameters['auth_sub_scopes' ]
-authsub_token = parameters[[]'token']
-youtube_service.SetAuthSubToken(authsub_token)
-youtube_service.UpgradeToSessionToken()
-
-"""
-# CLIENT_ID = '830901840095-ro3r226k4lkfpbgvliinc372hs9ma0p2.apps.googleusercontent.com'
 
 
-# CLIENT_SECRET = 'Qypg1VjBLlUS4JhLCFicG8fh'
-
-
-MISSING_CLIENT_SECRETS_MESSAGE = """
-WARNING: Please configure OAuth 2.0
-
-To make this sample run you will need to populate the client_secrets.json file
-found at:
-
-   %s
-
-with information from the APIs Console
-https://code.google.com/apis/console#access
-
-For more information about the client_secrets.json file format, please visit:
-https://developers.google.com/api-client-library/python/guide/aaa_client_secrets
-""" % os.path.abspath(os.path.join(os.path.dirname(__file__),
-                                   'client_secret.json'))
-
-
-
-
-
-
-#global has_youtube
-#global has_pinboard
 
 has_youtube= False
 has_pinboard = False
 authsub_token = ''
-"""
-
-# An OAuth 2 access scope that allows for full read/write access.
-YOUTUBE_READ_WRITE_SCOPE = "https://www.googleapis.com/auth/youtube"
-YOUTUBE_API_SERVICE_NAME = "youtube"
-YOUTUBE_API_VERSION = "v3"
-
-def get_authenticated_service():
-    
-    flow = flow_from_clientsecrets(CLIENT_SECRETS_FILE,
-    message=MISSING_CLIENT_SECRETS_MESSAGE,
-    scope=YOUTUBE_READ_WRITE_SCOPE)
-
-    storage = Storage("%s-oauth2.json" % sys.argv[0])
-    credentials = storage.get()
-
-    if credentials is None or credentials.invalid:
-       credentials = run(flow, storage)
-
-    youtube = build(YOUTUBE_API_SERVICE_NAME, YOUTUBE_API_VERSION,
-    http=credentials.authorize(httplib2.Http()))
-    
-    is_authenticated = True
-    
-    
-    SCOPE = 'https://gdata.youtube.com/feeds/api'
-    
-    flow = flow_from_clientsecrets('client_secret.json',
-                               scope=SCOPE,
-                               redirect_uri='http://localhost:5000/oauth2callback')
-    
-    #auth_uri = flow.step1_get_authorize_url()
-    #storage = Storage('plus.dat')
-    storage = Storage("%s-oauth2.json" % sys.argv[0])
-    credentials = storage.get()
-    
-    if credentials is None or credentials.invalid:
-        credentials = run(flow, storage)
-    
-    youtube = build(YOUTUBE_API_SERVICE_NAME, YOUTUBE_API_VERSION,
-    http=credentials.authorize(httplib2.Http()))
-     
-    # Munge the data in the credentials into a gdata OAuth2Token
-    # This is based on information in this blog post:
-    # https://groups.google.com/forum/m/#!msg/google-apps-developer-blog/1pGRCivuSUI/3EAIioKp0-wJ
-     
-    auth2token = gdata.gauth.OAuth2Token(client_id=credentials.client_id,
-      client_secret=credentials.client_secret,
-      scope=SCOPE,
-      access_token=credentials.access_token,
-      refresh_token=credentials.refresh_token,
-      user_agent='PinTube')
-    
-    client = gdata.youtube.client.YouTubeClient(source='PinTube',
-                                                auth_token=auth2token)
-    
-    auth2token.authorize(client)
-"""
 
 def has_playlist(username):
     url = "http://gdata.youtube.com/feeds/api/users/"
@@ -206,19 +113,11 @@ def test_pinboard(user, passw):
     
     user = '' + user
     passw = '' + passw
-    # p = pinboard(open(username=user, password=passw, token=None))
    
     
     try:
-        # p = pinboard
-        # p.open(username=user, password=passw, token=None)
         p = pinboard.open(username=user, password=passw)
         
-        # p = open()
-        # encoded_string = encode(user, passw)
-        # p(username=user, password=passw)
-        # p(encoded_string)
-        # #p = pinboard(open(username=user, password=passw, token=None))
     except urllib2.HTTPError, error:
         print error
         return False
@@ -293,8 +192,7 @@ def pinboard_login():
         else:
             print "Failure 1"
             return redirect(url_for('pinboard'))
-        # flash('Login requested for Pinboard with UserID="' + form.user_id.data + '", remember_me=' + str(form.remember_me.data))
-        # return redirect('/index')
+        
     return render_template('pinboard_login.html', title='Sign In to Pinboard', form=form)
 
 @app.route('/youtube', methods=['GET', 'POST'])
@@ -306,9 +204,6 @@ def youtube_login():
 @app.route('/')
 @app.route('/index')
 def index():
-    #parameters = cgi.FieldStorage()
-    #authsub_token = parameters.getvalue('token')#["token"]
-    #print "Token is: %s"%(authsub_token)
     global has_youtube
     global authsub_token
     if "token" in request.args:
@@ -324,7 +219,7 @@ def index():
     if has_youtube and has_pinboard:
         your_playlists = {} 
         playlist_feed = youtube_service.GetYouTubePlaylistFeed(username='default')
-        
+        url_pattern = r"""(http(s?)://www.youtube.com/watch+\Wv\W[a-zA-Z0-9-_]+)"""
         
         fo = open('playlist_feed.p', 'wb')
         pickle.dump(playlist_feed, fo)
@@ -333,54 +228,68 @@ def index():
         #Copies the playlist Names, URIs and Videos to a dictionary
         print "Beginning Playlist process"
         for playlist_entry in playlist_feed.entry:
+            #media_url = playlist_entry.GetMediaURL()
+            
+            
+           
            
             playlist_entry_title = playlist_entry.title.text
-            playlist_entry_uri = playlist_entry.id.text.split('/')[-1]
+            #playlist_entry_uri = playlist_entry.id.text.split('/')[-1]
             #playlist_content = playlist_entry.content
-            playlist_id = playlist_entry.id.text
+            #playlist_id = playlist_entry.id.text
             playlist_entry_id = playlist_entry.id.text.split('/')[-1]
             playlist_entry_video_feed = youtube_service.GetYouTubePlaylistVideoFeed(playlist_id=playlist_entry_id)
-            """
-            
-            requestURL = "https://gdata.youtube.com/feeds/api/users/default/playlists?v=2&token=%s" % authsub_token
-            root = ET.parse(urllib.urlopen(requestURL)).getroot()
-            print "=" * 100
-            print "This is the XML"
-            print root
-            print '\n'
-            print "=" * 100
-            
-            
-            tree = ET.parse('playlist_content')
-            root = tree.getroot()
-            print root[2][0].text
-            print root[2][1].text
-            """
+           
             
             #if playlist_entry_title not in pinboard_data["playlists"]:
-            print "Part 1"
+            #print "Part 1"
             #print "Playlist Content: %s" % playlist_content
             print "Playlist Entry Id : %s" % playlist_entry_id
-            #print "%s: %s" % (playlist_entry_title, playlist_entry_uri)
+            #print "%s: %s" % (playlist_entry_title, media_url)#playlist_entry_uri)
             #print "playlist_entry_video_feed: %s" % playlist_entry_video_feed
-            your_playlists.setdefault(playlist_entry_title, [playlist_entry_id, []])
+            
+            
+            playlist_info = {}
+            #playlist_info.setdefault(playlist_entry_title, playlist_entry_id)
+            playlist_videos = {}
+            
+            your_playlists.setdefault(playlist_entry_title, [playlist_entry_id, {}])
             
             for playlist_video_entry in playlist_entry_video_feed.entry:
-                print "Part 2"
+                #print "Part 2"
+                
                 video_title = playlist_video_entry.title.text
+                video_id = playlist_video_entry.id.text
                 #your_playlists[playlist_entry_title].append(playlist_video_entry.title.text)
-                your_playlists[playlist_entry_title][1].append(playlist_video_entry.title.text)
+                #your_playlists[playlist_entry_title][1].append(video_title)#(playlist_video_entry.title.text)
+                #your_playlists[playlist_entry_title][1].append(video_id)
+                
+                video_entry = youtube_service.GetYouTubeVideoEntry(video_id)
+                
+                #url_pattern = r"""(http(s?)://www.youtube.com/watch+\Wv\W[a-zA-Z0-9-_]+)"""
+                if video_entry.media.player is not None:
+                    media_url = video_entry.media.player.url
+                    media_url = re.search(url_pattern, media_url).group(0)
+                    print "%s => %s" % (video_title, media_url)
+                    your_playlists[playlist_entry_title][1].setdefault(video_title, media_url)
+                else:
+                    your_playlists[playlist_entry_title][1].setdefault(video_title, video_id)
+                
                 
             #if playlist_entry.title.text in pinboard_data['playlists']:
         
         #Checks to see if videos are in playlists that correspond to their tags on Pinboard
+        print "Your Playlists are %s" % your_playlists
+        print ""
         print "Pinboard_Data is %s" % pinboard_data
+        print ""
         print "Pinboard_Data Vid_Tags are %s" % pinboard_data["vid_tags"]
+        print ""
         for tag in pinboard_data["vid_tags"].keys():
         #for tag in pinboard_data["vid_tags"]["tags_for_vids"].keys():
             print "Part 3"
             #Adding playlist according to tag if not already present
-            if tag not in your_playlists:
+            if tag not in your_playlists.keys():
                 print "Part 4"
                 new_public_playlistentry = youtube_service.AddPlaylist(tag, 'A Pintube Playlist')
                 
@@ -401,7 +310,11 @@ def index():
                     https://developers.google.com/youtube/1.0/developers_guide_python#AddVideoToPlaylist
                     """
                     vid = str(vid)
-                    if vid not in your_playlists[tag][1]:
+                    vid = re.search(url_pattern, vid).group(0)
+                    vids =  your_playlists[tag][1]
+                    
+                    if vid not in vids.values(): #Insufficient to check for already present video
+                        print "Video: %s is not in %s" %(vid, vids)
                         print "Part 5"
                         vid_id_pattern = r"""youtu(?:\.be|be\.com)/(?:.*v(?:/|=)|(?:.*/)?)([a-zA-Z0-9-_]+)"""
                         vid_id = re.search(vid_id_pattern, vid).group(1)
@@ -429,34 +342,16 @@ def index():
                         print "XML is %s" % xml
                         
                         post = youtube_service.Post(xml, url, headers, url_params=params)
+                      
                         
-                        #data = urllib.urlencode(values)
-                        #req = urllib2.Request(url, data)
-                        #response = urllib2.urlopen(req)
-                        #the_page = response.read()
+                        #r = requests.post(url, data=xml, headers=headers)
                         
-                        #playlist_video_entry = youtube_service.AddPlaylistVideoEntryToPlaylist(
-                           # playlist_uri, vid_id)
-                        
-                        r = requests.post(url, data=xml, headers=headers)
-                        
-                        r
+                        #r
+                    else:
+                        print "You've already added %s" % vid
                         
                         #if isinstance(playlist_video_entry, gdata.youtube.YouTubePlaylistVideoEntry):
                             #print 'Video: %s added to Playlist: %s ' % (entry.title.text, tag)
                 
-            
     
-    
-    
-            
-        
-    
-    """
-    if "token" not in parameters:
-        print "Token not here"
-    else:
-        authsub_token = parameters["token"]
-        print "Token is: %s"%(authsub_token)
-    """
     return render_template('index.html', has_youtube=has_youtube, has_pinboard=has_pinboard)
