@@ -1,5 +1,6 @@
 from flask import Flask
 from flask.ext.login import LoginManager
+from flask.ext.sqlalchemy import SQLAlchemy
 from pintube import settings
 from micawber.providers import bootstrap_basic
 from micawber.contrib.mcflask import add_oembed_filters
