@@ -13,7 +13,7 @@ class User(db.Model):
     last_updated = db.Column(db.String(120), index=True, unique=True)
     token = db.Column(db.String(360), index=True, unique=True)
 
-    info_id = db.Column(db.Integer, db.ForeignKey('info.id'))
+    # info_id = db.Column(db.Integer, db.ForeignKey('info.id'))
     info = db.relationship('Info', backref=db.backref('users', lazy='dynamic'))  # , uselist=False)
 
     def __init__(self, username, last_updated, token, info):
@@ -21,6 +21,18 @@ class User(db.Model):
         self.last_updated = last_updated
         self.token = token
         self.info = info
+
+    def is_authenticated(self):
+        return True
+
+    def is_active(self):
+        return True
+
+    def is_anonymous(self):
+        return False
+
+    def get_id(self):
+        return unicode(self.id)
 
     def __repr__(self):
         return '<User: %r, last updated at %r>' % (self.username, self.last_updated)
@@ -30,7 +42,7 @@ class Info(db.Model):
     __tablename__ = 'info'
 
     id = db.Column(db.Integer, primary_key=True)
-    # user_id = db.Column(db.String(60), ForeignKey('users.id'))
+
     pinboard_videos = db.Column(db.String(300), index=True)  # , unique=True)
     pinboard_playlists = db.Column(db.String(300), index=True)  # , unique=True)
     pinboard_subscriptions = db.Column(db.String(300), index=True)  # , unique=True)
@@ -38,6 +50,7 @@ class Info(db.Model):
     youtube_subscriptions = db.Column(db.String(300), index=True)  # , unique=True)
 
     # user = relationship("User", backref=backref('addresses', order_by=id))
+    user_id = db.Column(db.Integer, ForeignKey('users.id'))
 
     def __init__(self, username):
         self.username = username

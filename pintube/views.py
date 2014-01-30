@@ -47,7 +47,12 @@ from flask.ext.login import login_user, logout_user, current_user, login_require
 
 
 from __init__ import app
-from forms import Youtube_Login_Form, Pinboard_Login_Form
+from __init__ import db
+from __init__ import models
+from __init__ import login_manager
+from forms import Pinboard_Login_Form
+from models import User
+from models import Info
 # from apiclient.discovery import build
 # from oauth2client.file import Storage
 # from oauth2client.client import flow_from_clientsecrets
@@ -183,6 +188,12 @@ def oauth():
     if not has_playlist():
         insert_playlist()
 """
+
+
+
+@login_manager.user_loader
+def load_user(id):
+    return User.query.get(int(id))
 
 @app.route('/pinboard', methods=['GET', 'POST'])
 def pinboard_login():
