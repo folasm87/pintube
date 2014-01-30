@@ -2,7 +2,7 @@ import xml.etree.ElementTree as ET
 import pinboard
 import urllib
 import urllib2
-# import httplib2
+import httplib2
 # import requests
 import os
 import sys
@@ -46,10 +46,10 @@ from flask import jsonify
 from flask.ext.login import login_user, logout_user, current_user, login_required
 
 
-from __init__ import app
-from __init__ import db
-from __init__ import models
-from __init__ import login_manager
+from pintube import app
+from pintube import db
+from pintube import models
+from pintube import login_manager
 from forms import Pinboard_Login_Form
 from models import User
 from models import Info
@@ -71,6 +71,13 @@ youtube_service.source = 'PinTube'
 # Keep in mind that providing a Client ID isn't necessary anymore for API requests
 
 
+has_youtube = False
+has_pinboard = False
+embed_videos = []
+authsub_token = ''
+pinboard_login = {}
+
+
 
 def GetAuthSubUrl():
     next = 'http://localhost:5000/'
@@ -81,13 +88,6 @@ def GetAuthSubUrl():
     return youtube_service.GenerateAuthSubURL(next, scope, secure, session)
 
 
-
-
-
-has_youtube = False
-has_pinboard = False
-embed_videos = []
-authsub_token = ''
 
 
 """
@@ -200,18 +200,21 @@ def pinboard_login():
     form = Pinboard_Login_Form()
     global has_pinboard
     global pinboard_data
+    global pinboard_login
     # print "Success 1"
     if form.validate_on_submit():
         session['pin_remember_me'] = form.pin_remember_me.data
         # print "Success 2"
         if test_pinboard(form.pin_user_id.data, form.pin_password.data):
             pinboard_data = get_pintubes(form.pin_user_id.data, form.pin_password.data)
+            pinboard_login.setdefault("username", form.pin_user_id)
+            pinboard_login.setdefault("password", form.pin_password)
             # print "Success 3"
             has_pinboard = True
             return redirect(url_for('index'))
-        # else:
+        else:
             # print "Failure 1"
-            # return redirect(url_for('pinboard'))
+            return redirect(url_for('pinboard_login'))
 
     return render_template('pinboard_login.html', title='Sign In to Pinboard', form=form)
 
