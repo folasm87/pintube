@@ -17,13 +17,12 @@ Icon
 # Byte-compiled / optimized / DLL files
 __pycache__/
 =======
->>>>>>> 5074cc39d68c6ef998c5ab09a504fbe9d5dda673
+
 *.py[cod]
 
 # C extensions
 *.so
 
-<<<<<<< HEAD
 # Distribution / packaging
 bin/
 build/
@@ -54,13 +53,13 @@ develop-eggs
 lib
 lib64
 __pycache__
->>>>>>> 5074cc39d68c6ef998c5ab09a504fbe9d5dda673
+
 
 # Installer logs
 pip-log.txt
 
 # Unit test / coverage reports
-<<<<<<< HEAD
+
 .tox/
 .coverage
 nosetests.xml
@@ -69,7 +68,7 @@ coverage.xml
 .coverage
 .tox
 nosetests.xml
->>>>>>> 5074cc39d68c6ef998c5ab09a504fbe9d5dda673
+
 
 # Translations
 *.mo
@@ -77,7 +76,7 @@ nosetests.xml
 # Mr Developer
 .mr.developer.cfg
 .project
-<<<<<<< HEAD
+
 .pydevproject
 =======
 .pydevproject

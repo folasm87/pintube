@@ -2,14 +2,14 @@ import xml.etree.ElementTree as ET
 import pinboard
 import urllib
 import urllib2
-import httplib2
-import requests
+# import httplib2
+# import requests
 import os
 import sys
 import re
 import cPickle as pickle
 
-from bs4 import BeautifulSoup
+# from bs4 import BeautifulSoup
 import micawber
 import gdata
 import gdata.youtube.service
@@ -46,12 +46,12 @@ from flask import jsonify
 from flask.ext.login import login_user, logout_user, current_user, login_required
 
 
-from pintube import app
+from __init__ import app
 from forms import Youtube_Login_Form, Pinboard_Login_Form
-from apiclient.discovery import build
-from oauth2client.file import Storage
-from oauth2client.client import flow_from_clientsecrets
-from oauth2client.tools import run
+# from apiclient.discovery import build
+# from oauth2client.file import Storage
+# from oauth2client.client import flow_from_clientsecrets
+# from oauth2client.tools import run
 
 
 # Initializing GData YouTubeService() used to generate the object so that we can communicate with the YouTube API
