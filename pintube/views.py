@@ -32,7 +32,6 @@ from flask import Response
 from flask import jsonify
 from flask.ext.login import login_user, logout_user, current_user, login_required
 
-
 from pintube import app
 from __init__ import db
 # from __init__ import models
@@ -55,8 +54,7 @@ has_pinboard = False
 embed_videos = []
 authsub_token = ''
 pin_login = {}
-
-
+pinboard_object = ""
 
 def GetAuthSubUrl():
     next = 'http://localhost:5000/'
@@ -66,85 +64,25 @@ def GetAuthSubUrl():
     # youtube_service = gdata.youtube.service.YouTubeService()
     return youtube_service.GenerateAuthSubURL(next, scope, secure, session)
 
-def test_pinboard(user, passw):
-
-    user = '' + user
-    passw = '' + passw
-
-
-    try:
-        p = pinboard.open(username=user, password=passw)
-
-    except urllib2.HTTPError, error:
-        print error
-        return False
-
-    return True
-
-video_pattern = '(watch+\Wv\W)'
-playlist_pattern = '(playlist+\Wlist=)'
-channel_pattern = '(user/)'
-pinboard_data = {}
-
-def get_pintubes(username, password):
-    videos = []
-    playlists = []
-    channels = []
-    tags_for_vids = {}
-    pintubes = {}
-    p = pinboard.open(username, password)
-    posts = p.posts(tag="youtube", count=1000)
-
-    for post in posts:
-        url = post[u'href']
-        tags = post[u'tags']
-        if re.search(video_pattern, url):
-            videos.append(url)
-            for tag in tags:
-                tag = str(tag)
-                if tag in tags_for_vids:
-                    tags_for_vids[tag].append(url)
-                elif tag != "youtube":
-                    tags_for_vids.setdefault(tag, [url])
-        elif re.search(playlist_pattern, url):
-            playlists.append(url)
-        elif re.search(channel_pattern, url):
-            channels.append(url)
-
-    # print 'Videos :- [%s]' % ', '.join(map(str, videos))
-    # print 'Channels :- [%s]' % ', '.join(map(str, channels))
-    # print 'Playlists :- [%s]' % ', '.join(map(str, playlists))
-    # print '-*' * 50
-
-    # for vid_tag in tags_for_vids:
-        # print "%s :-> [%s]" % (vid_tag, ', '.join(map(str, tags_for_vids[vid_tag])))
-
-
-
-    # print "Get_Pintube has run again"
-
-
-
-
-    return {"videos": videos, "playlists": playlists, "channels": channels, "vid_tags": tags_for_vids}
-
-"""
-@app.route('/oauth')
-def oauth():
-    if not has_playlist():
-        insert_playlist()
-"""
 
 
 vid_id_pattern = r"""youtu(?:\.be|be\.com)/(?:.*v(?:/|=)|(?:.*/)?)([a-zA-Z0-9-_]+)"""
-def get_vid_id(vid):
-    return re.search(vid_id_pattern, vid).group(1)
+def get_video_id(vid_url):
+    return re.search(vid_id_pattern, vid_url).group(1)
 
 playlist_id_pattern = r"""([a-zA-Z0-9_\-]{18})"""
 def get_playlist_id(playlist_url):
     return re.search(playlist_id_pattern, playlist_url).group(0)
 
-def get_vid_name(video_entry):
+subscription_id_pattern = r"""(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/ ]{11})"""
+def get_subscription_id(subscription_url):
+    print "Subscription URL is %s" % subscription_url
+    result = re.search(subscription_id_pattern, subscription_url)
+    if result is not None:
+        return result.group(0)
+    return None
+
+def get_video_name(video_entry):
     return video_entry.media.title.text
 
 def get_playlist_name(playlist_id=None, playlist_entry=None):
@@ -152,13 +90,34 @@ def get_playlist_name(playlist_id=None, playlist_entry=None):
         youtube_service.GetYouTubePlaylistVideoFeed(uri=playlist_uri)
     elif(playlist_entry):
         return playlist_entry.title.text
-    return "None"
+    return None
 
-def get_vid_entry(video_feed):
-    return video_feed.entry
+def get_video_entry(video_entry=None, video_id=None):
+    if video_id:
+        return youtube_service.GetYouTubeVideoEntry(video_id)
+    elif video_entry:
+        vid_id = video_entry.id.text
+        return youtube_service.GetYouTubeVideoEntry(vid_id)
+    return None
 
-def get_playlist_entry(playlist_feed):
-    return playlist_feed.entry
+def get_playlist_entry(service, playlist_entry=None, playlist_id=None):
+    if playlist_id:
+        result = service.GetYouTubePlaylistEntry(playlist_id)
+        return result
+    elif playlist_entry:
+        plist_id = playlist_entry.id.text
+        return service.GetYouTubePlaylistEntry(plist_id)
+
+    return None
+
+def get_subscription_entry(sub_entry=None, sub_id=None):
+    if sub_id:
+        return youtube_service.GetYouTubeSubscriptionEntry(sub_id)
+    elif sub_entry:
+        s_id = sub_entry.id.text
+        return youtube_service.GetYouTubeSubscriptionEntry(s_id)
+
+    return None
 
 def get_user_playlist_feed():
     return youtube_service.GetYouTubePlaylistFeed(username='default')
@@ -166,7 +125,10 @@ def get_user_playlist_feed():
 def get_playlist_video_feed(playlist_id):
     return youtube_service.GetYouTubePlaylistVideoFeed(playlist_id=playlist_id)
 
-def get_vid_pic(video_id):
+def get_subscription_feed():
+    return youtube_service.GetYouTubeSubscriptionFeed(username='default')
+
+def get_video_pic(video_id):
     return """<img src="http://img.youtube.com/vi/{0}/hqdefault.jpg"></img>""".format(video_id)
 
 
@@ -187,14 +149,86 @@ def add_video_to_playlist(video_id, playlist_id, position):
 def create_playlist(playlist_title, playlist_desc):
     return youtube_service.AddPlaylist(playlist_title, playlist_desc)
 
-def add_subscription(channel_id):
+def add_subscription(subscription_id):
     pass
 
-def vid_in_playlist(video_id, playlist_id):
+def is_vid_in_playlist(video_id, playlist_id):
     pass
 
-def playlist_exists(playlist_id):
+def does_playlist_exist(playlist_id):
     pass
+
+
+
+def test_pinboard(user, passw):
+    user = '' + user
+    passw = '' + passw
+
+    try:
+        p = pinboard.open(username=user, password=passw)
+    except urllib2.HTTPError, error:
+        print error
+        return False
+    return True
+
+video_pattern = '(watch+\Wv\W)'
+playlist_pattern = '(playlist+\Wlist=)'
+channel_pattern = '(user/)'
+pinboard_data = {}
+
+def get_pintubes(username, password):
+    videos = []
+    playlists = []
+    channels = []
+    tags_for_vids = {}
+    pintubes = {}
+    pinboard_object = pinboard.open(username, password)
+    db_videos = {}
+    db_playlists = {}
+    db_subscriptions = {}
+    checker = str(pinboard_object['last_updated'])
+    last_updated = User.query.filter(User.last_updated == checker)
+    # last_updated = User.query.filter_by(User.last_updated == checker).scalar
+    print "Last Updated is: %s" % last_updated.scalar()
+
+    if last_updated.scalar() is None:
+        posts = pinboard_object.posts(tag="youtube", count=1000)
+
+        for post in posts:
+            url = post[u'href']
+            tags = post[u'tags']
+            if re.search(video_pattern, url):
+                db_videos.setdefault(get_video_name(get_video_entry(video_id=get_video_id(url))), url)
+                videos.append(url)
+                for tag in tags:
+                    tag = str(tag)
+                    if tag in tags_for_vids:
+                        tags_for_vids[tag].append(url)
+                    elif tag != "youtube":
+                        tags_for_vids.setdefault(tag, [url])
+            elif re.search(playlist_pattern, url):
+                temp = get_playlist_id(url)
+                temp2 = get_playlist_entry(youtube_service, playlist_id=temp)
+                temp3 = get_playlist_name(playlist_entry=temp2)
+                db_playlists.setdefault(temp3, url)
+                playlists.append(url)
+            elif re.search(channel_pattern, url):
+                g.url = url
+                db_subscriptions.setdefault(get_subscription_id(g.url), url)
+                channels.append(url)
+
+
+        user = User(username=username, last_updated=checker)
+        info = Info(pinboard_videos=db_videos, pinboard_playlists=playlists, pinboard_subscriptions=channels, users=user)
+        db.session.add(user)
+        db.session.commit()
+
+    else:
+        print "Not updated since last accessed"
+
+    return {"videos": videos, "playlists": playlists, "channels": channels, "vid_tags": tags_for_vids}
+
+
 
 @login_manager.user_loader
 def load_user(id):
@@ -299,7 +333,7 @@ def index():
                     vids = your_playlists[tag][1]
 
                     if vid not in vids.values():  # Insufficient to check for already present video
-                        vid_id = get_vid_id(vid)
+                        vid_id = get_video_id(vid)
                         playlist_id = your_playlists[tag][0].replace('PL', '')
                         post = add_video_to_playlist(vid_id, playlist_id, 1)
 
