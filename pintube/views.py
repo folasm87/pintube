@@ -12,6 +12,7 @@ import re
 import micawber
 import gdata
 import gdata.youtube.service
+from gdata.service import RequestError
 from gdata import youtube
 from gdata import apps
 from gdata import client
@@ -33,12 +34,13 @@ from flask import jsonify
 from flask.ext.login import login_user, logout_user, current_user, login_required
 
 from pintube import app
-from __init__ import db
-# from __init__ import models
-from __init__ import login_manager
+from pintube import db
+from pintube import models
+from pintube import login_manager
 from forms import Pinboard_Login_Form
 from models import User
 from models import Info
+from sqlalchemy.exc import IntegrityError
 
 
 # Initializing GData YouTubeService() used to generate the object so that we can communicate with the YouTube API
@@ -54,7 +56,7 @@ has_pinboard = False
 embed_videos = []
 authsub_token = ''
 pin_login = {}
-pinboard_object = ""
+pinboard_object = []
 
 def GetAuthSubUrl():
     next = 'http://localhost:5000/'
@@ -68,10 +70,12 @@ def GetAuthSubUrl():
 
 vid_id_pattern = r"""youtu(?:\.be|be\.com)/(?:.*v(?:/|=)|(?:.*/)?)([a-zA-Z0-9-_]+)"""
 def get_video_id(vid_url):
+    print "Video URL is %s" % vid_url
     return re.search(vid_id_pattern, vid_url).group(1)
 
-playlist_id_pattern = r"""([a-zA-Z0-9_\-]{18})"""
+playlist_id_pattern = r"""([a-zA-Z0-9_\-]{11,100})"""  # r"""([a-zA-Z0-9_\-]{18})"""
 def get_playlist_id(playlist_url):
+    print "Playlist URL is %s" % playlist_url
     return re.search(playlist_id_pattern, playlist_url).group(0)
 
 subscription_id_pattern = r"""(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/ ]{11})"""
@@ -87,26 +91,44 @@ def get_video_name(video_entry):
 
 def get_playlist_name(playlist_id=None, playlist_entry=None):
     if (playlist_id):
-        youtube_service.GetYouTubePlaylistVideoFeed(uri=playlist_uri)
+        # youtube_service.GetYouTubePlaylistVideoFeed(id=playlist_id)
+        uri = 'https://gdata.youtube.com/feeds/api/playlists/' + playlist_id
+        print "Playlist URI: %s" % uri
+        return youtube_service.GetYouTubePlaylistFeed(uri).title.text
     elif(playlist_entry):
         return playlist_entry.title.text
     return None
 
+def get_subscription_name(sub_id=None, sub_entry=None):
+    if (sub_id):
+        uri = "https://gdata.youtube.com/feeds/api/users/" + sub_id
+        print "Subscription URI is %s" % uri
+        return youtube_service.GetYouTubeSubscriptionEntry(uri).title.text
+    elif(sub_entry):
+        return sub_entry.title.text
+    return None
+
 def get_video_entry(video_entry=None, video_id=None):
     if video_id:
-        return youtube_service.GetYouTubeVideoEntry(video_id)
+        return youtube_service.GetYouTubeVideoEntry(video_id=video_id)
     elif video_entry:
         vid_id = video_entry.id.text
-        return youtube_service.GetYouTubeVideoEntry(vid_id)
+        return youtube_service.GetYouTubeVideoEntry(video_id=vid_id)
     return None
 
 def get_playlist_entry(service, playlist_entry=None, playlist_id=None):
+    """
     if playlist_id:
-        result = service.GetYouTubePlaylistEntry(playlist_id)
+        print "Playlist ID is %s" % playlist_id
+        # playlist_id = playlist_id.replace('PL', '')
+        uri = "https://gdata.youtube.com/feeds/api/playlists/{0}".format(playlist_id)
+        result = service.GetYouTubePlaylistEntry(uri)
         return result
-    elif playlist_entry:
+    """
+    if playlist_entry:
         plist_id = playlist_entry.id.text
-        return service.GetYouTubePlaylistEntry(plist_id)
+        plist_uri = "https://gdata.youtube.com/feeds/api/playlists/" + plist_id
+        return service.GetYouTubePlaylistEntry(plist_uri)
 
     return None
 
@@ -177,29 +199,46 @@ channel_pattern = '(user/)'
 pinboard_data = {}
 
 def get_pintubes(username, password):
+    global pinboard_object
     videos = []
     playlists = []
     channels = []
     tags_for_vids = {}
     pintubes = {}
-    pinboard_object = pinboard.open(username, password)
+    pinboard_object = pinboard.open(username=username, password=password)
     db_videos = {}
     db_playlists = {}
     db_subscriptions = {}
-    checker = str(pinboard_object['last_updated'])
-    last_updated = User.query.filter(User.last_updated == checker)
-    # last_updated = User.query.filter_by(User.last_updated == checker).scalar
-    print "Last Updated is: %s" % last_updated.scalar()
+    checker = pinboard_object['last_updated']
+    # last_updated = None  # User.query.filter(User.last_updated == checker)
+    check_update = User.query.filter(User.last_updated == checker).first()
+    # print "*" * 100
+    # print "Last Updated is: %s, first is %s, and all is %s" % (last_updated, last_updated.first(), last_updated.all())
+    # print "*" * 100
 
-    if last_updated.scalar() is None:
+    # try_now = True
+    if check_update is None:  # and (last_updated is None or last_updated.first() == ""):  # (last_updated.scalar() is None) or
         posts = pinboard_object.posts(tag="youtube", count=1000)
 
         for post in posts:
             url = post[u'href']
             tags = post[u'tags']
             if re.search(video_pattern, url):
-                db_videos.setdefault(get_video_name(get_video_entry(video_id=get_video_id(url))), url)
+                temp = get_video_id(url)
+                print "Video ID is %s" % temp
+                try:
+                    temp2 = get_video_entry(video_id=temp)
+
+                except RequestError, error:
+                    print error
+                    print "Video Error!"
+                    continue
+
+                temp3 = get_video_name(temp2)
+                print "Video Name is %s" % temp3
+                db_videos.setdefault(temp3)
                 videos.append(url)
+
                 for tag in tags:
                     tag = str(tag)
                     if tag in tags_for_vids:
@@ -208,23 +247,66 @@ def get_pintubes(username, password):
                         tags_for_vids.setdefault(tag, [url])
             elif re.search(playlist_pattern, url):
                 temp = get_playlist_id(url)
-                temp2 = get_playlist_entry(youtube_service, playlist_id=temp)
-                temp3 = get_playlist_name(playlist_entry=temp2)
-                db_playlists.setdefault(temp3, url)
+                print "Playlist ID: %s" % temp
+
+                try:
+                    temp2 = get_playlist_name(temp)
+                except RequestError, error:
+                    print error
+                    print "Playlist Error!"
+                    continue
+                db_playlists.setdefault(temp2, url)
                 playlists.append(url)
+
             elif re.search(channel_pattern, url):
-                g.url = url
-                db_subscriptions.setdefault(get_subscription_id(g.url), url)
+                temp = get_subscription_id(url)
+                try:
+                    temp2 = get_subscription_name(sub_id=temp)
+                except RequestError, error:
+                    print error
+                    print "Subscription Error!"
+                    continue
+                db_subscriptions.setdefault(temp2, url)
                 channels.append(url)
 
 
-        user = User(username=username, last_updated=checker)
-        info = Info(pinboard_videos=db_videos, pinboard_playlists=playlists, pinboard_subscriptions=channels, users=user)
-        db.session.add(user)
-        db.session.commit()
+        users = models.User.query.all()
+        infoz = models.Info.query.all()
+
+        for u in users:
+                db.session.delete(u)
+
+        for i in infoz:
+            db.session.delete(i)
+
+        """
+        if (len(users) > 0 and len(infoz) > 0):
+            for u in users:
+                db.session.delete(u)
+
+            for i in infoz:
+                db.session.delete(i)
+        """
+
+        # db.create_all()
+        info = Info(pinboard_videos=db_videos, pinboard_playlists=db_playlists, pinboard_subscriptions=db_subscriptions)
+        user = User(username=username, last_updated=pinboard_object['last_updated'], info=[info])
+        # user.info = info
+
+        try:
+            db.session.add(user)
+            db.session.commit()
+        except IntegrityError, error:
+            print error
+            print "You've already added a row with the same user_name before"
+
+    # elif(last_updated):
 
     else:
         print "Not updated since last accessed"
+        check_update.last_updated = pinboard_object['last_updated']
+        db.session.add(check_update)
+        db.session.commit()
 
     return {"videos": videos, "playlists": playlists, "channels": channels, "vid_tags": tags_for_vids}
 

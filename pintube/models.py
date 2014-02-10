@@ -1,5 +1,5 @@
 import sqlalchemy
-from __init__ import db
+from pintube import db
 from sqlalchemy import ForeignKey
 from sqlalchemy.types import TypeDecorator, VARCHAR
 from sqlalchemy.ext.mutable import Mutable
@@ -64,20 +64,20 @@ class User(db.Model):
     __tablename__ = 'users'
 
     id = db.Column(db.Integer, primary_key=True)
+    sqlite_autoincrement = True
     username = db.Column(db.String(80), index=True, unique=True)
     last_updated = db.Column(db.String(120), index=True, unique=True)
     # token = db.Column(db.String(360), index=True, unique=True)
 
     # info_id = db.Column(db.Integer, db.ForeignKey('info.id'))
-    info = db.relationship('Info', backref=db.backref('users'))  # , uselist=False) lazy='dynamic'
+    info = db.relationship('Info', backref=db.backref('user'))  # , uselist=False) lazy='dynamic'
 
-    """
-    def __init__(self, username, last_updated, token, info):
+
+    def __init__(self, username, last_updated, info):
         self.username = username
         self.last_updated = last_updated
-        self.token = token
         self.info = info
-    """
+
 
     def is_authenticated(self):
         return True
@@ -92,7 +92,7 @@ class User(db.Model):
         return unicode(self.id)
 
     def __repr__(self):
-        return '<User: %r, last updated at %r>' % (self.username, self.last_updated)
+        return '<User( %s, %s, %s)>' % (self.username, self.last_updated, self.info)
 
 class Info(db.Model):
 
@@ -102,15 +102,17 @@ class Info(db.Model):
     pinboard_videos = db.Column(MutableDict.as_mutable(JSONEncodedDict), index=True)
     pinboard_playlists = db.Column(MutableDict.as_mutable(JSONEncodedDict), index=True)
     pinboard_subscriptions = db.Column(MutableDict.as_mutable(JSONEncodedDict), index=True)
-    # youtube_playlists = db.Column(MutableDict.as_mutable(JSONEncodedDict), index=True)
-    # youtube_subscriptions = db.Column(MutableDict.as_mutable(JSONEncodedDict), index=True)
-
     user_id = db.Column(db.Integer, ForeignKey('users.id'))
 
-    """
-    def __init__(self, username):
-        self.username = username
-    """
+
+    def __init__(self, pinboard_videos, pinboard_playlists, pinboard_subscriptions):
+        self.pinboard_videos = pinboard_videos
+        self.pinboard_playlists = pinboard_playlists
+        self.pinboard_subscriptions = pinboard_subscriptions
+
+
 
     def __repr__(self):
-        return '<User %r>' % (self.username)
+        return '<Info(%s, %s, %s)>' % (self.pinboard_videos, self.pinboard_playlists, self.pinboard_subscriptions)
+
+
