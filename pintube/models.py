@@ -61,7 +61,7 @@ class MutableDict(Mutable, dict):
 
 class User(db.Model):
 
-    __tablename__ = 'users'
+    __tablename__ = 'user'
 
     id = db.Column(db.Integer, primary_key=True)
     sqlite_autoincrement = True
@@ -70,7 +70,7 @@ class User(db.Model):
     # token = db.Column(db.String(360), index=True, unique=True)
 
     # info_id = db.Column(db.Integer, db.ForeignKey('info.id'))
-    info = db.relationship('Info', backref=db.backref('user'))  # , uselist=False) lazy='dynamic'
+    info = db.relationship('Info', backref=db.backref('user'), uselist=False)  # , uselist=False) lazy='dynamic'
 
 
     def __init__(self, username, last_updated, info):
@@ -102,7 +102,7 @@ class Info(db.Model):
     pinboard_videos = db.Column(MutableDict.as_mutable(JSONEncodedDict), index=True)
     pinboard_playlists = db.Column(MutableDict.as_mutable(JSONEncodedDict), index=True)
     pinboard_subscriptions = db.Column(MutableDict.as_mutable(JSONEncodedDict), index=True)
-    user_id = db.Column(db.Integer, ForeignKey('users.id'))
+    user_id = db.Column(db.Integer, ForeignKey('user.id'))
 
 
     def __init__(self, pinboard_videos, pinboard_playlists, pinboard_subscriptions):

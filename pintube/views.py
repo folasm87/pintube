@@ -55,8 +55,8 @@ has_youtube = False
 has_pinboard = False
 embed_videos = []
 authsub_token = ''
-pin_login = {}
-pinboard_object = []
+# pin_login = {}
+# pinboard_object = {}
 
 def GetAuthSubUrl():
     next = 'http://localhost:5000/'
@@ -76,14 +76,36 @@ def get_video_id(vid_url):
 playlist_id_pattern = r"""([a-zA-Z0-9_\-]{11,100})"""  # r"""([a-zA-Z0-9_\-]{18})"""
 def get_playlist_id(playlist_url):
     print "Playlist URL is %s" % playlist_url
-    return re.search(playlist_id_pattern, playlist_url).group(0)
+    id = re.search(playlist_id_pattern, playlist_url).group(0)
+    print "Playlist URL %s has an id : %s" % (playlist_url, id)
+    return id  # re.search(playlist_id_pattern, playlist_url).group(0)
 
-subscription_id_pattern = r"""(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/ ]{11})"""
+# subscription_id_pattern = r"""(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/ ]{11})"""
+# subscription_id_pattern = r"""(\w(?:.*/)|(?:.*))"""
+subscription_id_pattern = r"""(http://www.youtube.com/user/(\w(?:.*/)|(?:.*)))"""
 def get_subscription_id(subscription_url):
+    """
+    def find_user(url):
+  prev = None
+  for part in url.lower().split('/'):
+  if prev == 'user':
+  return part
+  prev = part
+  raise ValueError('Could not find user in url')
+    """
+    prev = None
+    for part in url.lower().split('/'):
+        if prev == 'user':
+            return part
+    prev = part
+    raise ValueError('Could not find user in url')
+
     print "Subscription URL is %s" % subscription_url
-    result = re.search(subscription_id_pattern, subscription_url)
+    result = re.search(subscription_id_pattern, subscription_url).group(1)
+    result.replace("/", "")
+    print "Subscription ID is %s" % result
     if result is not None:
-        return result.group(0)
+        return result
     return None
 
 def get_video_name(video_entry):
@@ -102,15 +124,18 @@ def get_playlist_name(playlist_id=None, playlist_entry=None):
 def get_subscription_name(sub_id=None, sub_entry=None):
     if (sub_id):
         uri = "https://gdata.youtube.com/feeds/api/users/" + sub_id
-        print "Subscription URI is %s" % uri
-        return youtube_service.GetYouTubeSubscriptionEntry(uri).title.text
+        title = youtube_service.GetYouTubeSubscriptionEntry(uri).title.text
+        print "Subscription Title for URI: %s => %s" % (uri, title)
+        return title
     elif(sub_entry):
-        return sub_entry.title.text
+        title = sub_entry.title.text
+        print "Subscription Title is %s" % title
+        return title
     return None
 
-def get_video_entry(video_entry=None, video_id=None):
-    if video_id:
-        return youtube_service.GetYouTubeVideoEntry(video_id=video_id)
+def get_video_entry(video_entry=None, vid_id=None):
+    if vid_id:
+        return youtube_service.GetYouTubeVideoEntry(video_id=vid_id)
     elif video_entry:
         vid_id = video_entry.id.text
         return youtube_service.GetYouTubeVideoEntry(video_id=vid_id)
@@ -182,34 +207,38 @@ def does_playlist_exist(playlist_id):
 
 
 
-def test_pinboard(user, passw):
+def get_pinboard(user, passw):
     user = '' + user
     passw = '' + passw
 
     try:
         p = pinboard.open(username=user, password=passw)
+        print "Get Pinboard returns " + str(p)
     except urllib2.HTTPError, error:
         print error
-        return False
-    return True
+        return {"Pass": False}
+    return {"Pass": True, "pinboard_object": p, "username": user}
 
 video_pattern = '(watch+\Wv\W)'
 playlist_pattern = '(playlist+\Wlist=)'
 channel_pattern = '(user/)'
 pinboard_data = {}
 
-def get_pintubes(username, password):
-    global pinboard_object
+def get_pintubes(pinboard_data):
+
+    # global pinboard_object
     videos = []
     playlists = []
     channels = []
     tags_for_vids = {}
     pintubes = {}
-    pinboard_object = pinboard.open(username=username, password=password)
+    pinboard_object = pinboard_data["pinboard_object"]  # pinboard.open(username, password)
+    checker = pinboard_data["pinboard_object"]["last_updated"]
+    last = pinboard_object['last_updated']  # .last_update()
+    print "Checker is %s from Pinboard Object %s, Try Again: %s" % (checker, pinboard_object, str(last))
     db_videos = {}
     db_playlists = {}
     db_subscriptions = {}
-    checker = pinboard_object['last_updated']
     # last_updated = None  # User.query.filter(User.last_updated == checker)
     check_update = User.query.filter(User.last_updated == checker).first()
     # print "*" * 100
@@ -217,7 +246,7 @@ def get_pintubes(username, password):
     # print "*" * 100
 
     # try_now = True
-    if check_update is None:  # and (last_updated is None or last_updated.first() == ""):  # (last_updated.scalar() is None) or
+    if ((check_update is None) or (check_update.last_updated != checker)):  # and (last_updated is None or last_updated.first() == ""):  # (last_updated.scalar() is None) or
         posts = pinboard_object.posts(tag="youtube", count=1000)
 
         for post in posts:
@@ -227,7 +256,7 @@ def get_pintubes(username, password):
                 temp = get_video_id(url)
                 print "Video ID is %s" % temp
                 try:
-                    temp2 = get_video_entry(video_id=temp)
+                    temp2 = get_video_entry(vid_id=temp)
 
                 except RequestError, error:
                     print error
@@ -236,7 +265,9 @@ def get_pintubes(username, password):
 
                 temp3 = get_video_name(temp2)
                 print "Video Name is %s" % temp3
-                db_videos.setdefault(temp3)
+                if url is None:
+                    print "Video URL is NONE"
+                db_videos.setdefault(temp3, url)
                 videos.append(url)
 
                 for tag in tags:
@@ -290,7 +321,7 @@ def get_pintubes(username, password):
 
         # db.create_all()
         info = Info(pinboard_videos=db_videos, pinboard_playlists=db_playlists, pinboard_subscriptions=db_subscriptions)
-        user = User(username=username, last_updated=pinboard_object['last_updated'], info=[info])
+        user = User(username=pinboard_data["username"], last_updated=checker, info=info)
         # user.info = info
 
         try:
@@ -300,15 +331,26 @@ def get_pintubes(username, password):
             print error
             print "You've already added a row with the same user_name before"
 
-    # elif(last_updated):
-
-    else:
-        print "Not updated since last accessed"
-        check_update.last_updated = pinboard_object['last_updated']
+        """
+    elif(check_update.last_updated is None):
+        print "Pinboard was last updated at %s" % str(checker)
+        check_update.last_updated = checker
         db.session.add(check_update)
         db.session.commit()
+        """
+    else:
+        print "Not updated since last accessed"
+        check_update.last_updated = checker  # pinboard_object['last_updated']
+        db.session.add(check_update)
+        db.session.commit()
+        current_user = User.query.filter_by(username=pinboard_data["username"]).first()
+        print current_user
+        current_info = current_user.info
+        print current_info
+        return {"videos": current_info.pinboard_videos.values(), "playlists": current_info.pinboard_playlists.values(), "channels": current_info.pinboard_subscriptions.values()}
 
-    return {"videos": videos, "playlists": playlists, "channels": channels, "vid_tags": tags_for_vids}
+
+    return {"videos": videos, "playlists": playlists, "channels": channels}  # , "vid_tags": tags_for_vids}
 
 
 
@@ -321,20 +363,15 @@ def pinboard_login():
     form = Pinboard_Login_Form()
     global has_pinboard
     global pinboard_data
-    global pin_login
 
     if form.validate_on_submit():
         session['pin_remember_me'] = form.pin_remember_me.data
-
-        if test_pinboard(form.pin_user_id.data, form.pin_password.data):
-            pinboard_data = get_pintubes(form.pin_user_id.data, form.pin_password.data)
-            pin_login.setdefault("username", form.pin_user_id)
-            pin_login.setdefault("password", form.pin_password)
-
+        pin = get_pinboard(form.pin_user_id.data, form.pin_password.data)
+        if pin["Pass"]:
+            pinboard_data = get_pintubes(pin)
             has_pinboard = True
             return redirect(url_for('index'))
         else:
-
             return redirect(url_for('pinboard_login'))
 
     return render_template('pinboard_login.html', title='Sign In to Pinboard', form=form)
@@ -403,7 +440,7 @@ def index():
                 else:
                     your_playlists[playlist_entry_title][1].setdefault(video_title, video_id)
 
-
+        """
         for tag in pinboard_data["vid_tags"].keys():
             if tag not in your_playlists.keys():
                 new_public_playlistentry = youtube_service.AddPlaylist(tag, 'A Pintube Playlist')
@@ -419,5 +456,5 @@ def index():
                         playlist_id = your_playlists[tag][0].replace('PL', '')
                         post = add_video_to_playlist(vid_id, playlist_id, 1)
 
-
+        """
     return render_template('index.html', has_youtube=has_youtube, has_pinboard=has_pinboard, embed_videos=embed_videos, embed_playlists=embed_playlists)
