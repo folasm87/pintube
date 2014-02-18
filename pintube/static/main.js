@@ -15,6 +15,19 @@ $(document).ready(function() {
 		$(".alert-info").alert('close');
 		$(".alert-success").show();
 	});
+	/*
+	function onYtEvent(payload) {
+		var logElement = document.getElementById('ytsubscribe-events-log');
+		if (payload.eventType == 'subscribe') {
+			logElement.innerHTML = 'You are subscribing to this channel'
+		} else if (payload.eventType == 'unsubscribe') {
+			logElement.innerHTML = 'You are unsubscribing from this channel'
+		}
+		if (window.console) {
+			window.console.log('ytsubscribe event: ', payload);
+		}
+	}*/
+
 });
 
 (function($) {
@@ -53,4 +66,4 @@ $(document).ready(function() {
 			});
 		}
 	});
-})(jQuery); 
+})(jQuery);

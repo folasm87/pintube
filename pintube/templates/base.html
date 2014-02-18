@@ -1,10 +1,5 @@
 <!DOCTYPE html>
 <head>
-	{% if title %}
-	<title>{{title}}</title>
-	{% else %}
-	<titlePinTube</title>
-	{% endif %}
 	<title>PinTube</title>
 	<meta name="viewport" content="width=device-width, initial-scale=1.0" charset="UTF-8">
 	<link rel=stylesheet type=text/css href="{{ url_for('static', filename='style.css') }}">
@@ -12,6 +7,7 @@
 	<link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.0.2/css/bootstrap-theme.min.css" media="screen">
 	<script src="http://code.jquery.com/jquery-1.10.2.min.js"></script>
 	<script src="http://netdna.bootstrapcdn.com/bootstrap/3.0.2/js/bootstrap.min.js"></script>
+	<script src="https://apis.google.com/js/platform.js"></script>
 	<script type=text/javascript src="{{url_for('static', filename='main.js') }}"></script>
 	<!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
 	<!--[if lt IE 9]>
