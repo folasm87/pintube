@@ -504,4 +504,9 @@ def index():
 
         """
         user = User.query.filter_by(username=pinboard_object_data["username"]).first_or_404()
-    return render_template('index.html', has_youtube=has_youtube, has_pinboard=has_pinboard, embed_videos=embed_videos, embed_playlists=embed_playlists, user=user)
+        videos = user.info.pinboard_videos
+        playlists = user.info.pinboard_playlists
+        subscriptions = user.info.pinboard_subscriptions
+        print "Testing User Here: %s" % user
+        return render_template('index.html', has_youtube=has_youtube, has_pinboard=has_pinboard, videos=videos, playlists=playlists, subscriptions=subscriptions)
+    return render_template('index.html', has_youtube=has_youtube, has_pinboard=has_pinboard)

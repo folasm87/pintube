@@ -3,6 +3,8 @@
 {% block content %}
 
 <h2>PinTube</h2>
+
+{% if has_youtube and has_pinboard %}
 <div class="row">
 	<div class="col-md-4">
 		<div class="container">
@@ -41,40 +43,44 @@
 								</thead>
 								<tbody>
 									
-									{% for vid in embed_videos %}
-									<tr>
-										<td> Column content </td>
-										<td><!-- Button trigger modal -->
-										
-										<button class="btn btn-primary btn-lg" data-toggle="modal" data-target="#myModal{{loop.index}}">
-											Launch demo modal
-										</button><!-- Modal -->
-										<div class="modal fade" id="myModal{{loop.index}}" tabindex="-1" role="dialog" aria-labelledby="myModalLabel{{loop.index}}" aria-hidden="true">
-											<div class="modal-dialog">
-												<div class="modal-content">
-													<div class="modal-header">
-														<button type="button" class="close" data-dismiss="modal" aria-hidden="true">
-															&times;
-														</button>
-														<h4 class="modal-title" id="myModalLabel{{loop.index}}">Modal title</h4>
-													</div>
-													<div class="modal-body">
-														{{vid|oembed()}}
-													</div>
-													<div class="modal-footer">
-														<button type="button" class="btn btn-default" data-dismiss="modal">
-															Close
-														</button>
-														<button type="button" class="btn btn-primary">
-															Save changes
-														</button>
+									{# for value1 in user.info.pinboard_videos.iteritems() #}
+									
+										{% for key, value in videos.iteritems() %}
+										<tr>
+											<td> Column content </td>
+											<td><!-- Button trigger modal -->
+											
+											<button class="btn btn-primary btn-lg" data-toggle="modal" data-target="#myModal{{loop.index}}">
+												Launch demo modal
+											</button><!-- Modal -->
+											<div class="modal fade" id="myModal{{loop.index}}" tabindex="-1" role="dialog" aria-labelledby="myModalLabel{{loop.index}}" aria-hidden="true">
+												<div class="modal-dialog">
+													<div class="modal-content">
+														<div class="modal-header">
+															<button type="button" class="close" data-dismiss="modal" aria-hidden="true">
+																&times;
+															</button>
+															<h4 class="modal-title" id="myModalLabel{{loop.index}}">Modal title</h4>
+														</div>
+														<div class="modal-body">
+															
+																{{value["url"]|oembed()}}
+															
+														</div>
+														<div class="modal-footer">
+															<button type="button" class="btn btn-default" data-dismiss="modal">
+																Close
+															</button>
+															<button type="button" class="btn btn-primary">
+																Save changes
+															</button>
+														</div>
 													</div>
 												</div>
-											</div>
-										</div></td>
-										<td> Column content </td>
-									</tr>
-									
+											</div></td>
+											<td> Column content </td>
+										</tr>
+										{# endfor #}
 									{% endfor %}
 									<!--
 									<tr class="active">
@@ -329,4 +335,6 @@
 </div>
 
 </div>
+
+{% endif %}
 {% endblock %}
