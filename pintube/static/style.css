@@ -142,3 +142,15 @@ th, td{
 	font-size: 13px;
 	font-weight: normal;
 }
+
+/*
+ Credit goes to Scott Dawson
+ http://dawsonmediadesign.com/blog/development/creating-a-variable-width-modal-dialog-using-bootstrap-3/
+ 
+ */
+.modal.modal-wide .modal-dialog {
+  width: 90%;
+}
+.modal-wide .modal-body {
+  overflow-y: auto;
+}

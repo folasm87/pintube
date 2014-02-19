@@ -50,17 +50,17 @@
 											<td> Column content </td>
 											<td><!-- Button trigger modal -->
 											
-											<button class="btn btn-primary btn-lg" data-toggle="modal" data-target="#myModal{{loop.index}}">
-												Launch demo modal
+											<button class="btn btn-primary btn-lg" data-toggle="modal" data-target="#myVideoModal{{loop.index}}">
+												{{key}}
 											</button><!-- Modal -->
-											<div class="modal fade" id="myModal{{loop.index}}" tabindex="-1" role="dialog" aria-labelledby="myModalLabel{{loop.index}}" aria-hidden="true">
+											<div class="modal fade" id="myVideoModal{{loop.index}}" tabindex="-1" role="dialog" aria-labelledby="myVideoModalLabel{{loop.index}}" aria-hidden="true">
 												<div class="modal-dialog">
 													<div class="modal-content">
 														<div class="modal-header">
 															<button type="button" class="close" data-dismiss="modal" aria-hidden="true">
 																&times;
 															</button>
-															<h4 class="modal-title" id="myModalLabel{{loop.index}}">Modal title</h4>
+															<h4 class="modal-title" id="myVideoModalLabel{{loop.index}}">{{key}}</h4>
 														</div>
 														<div class="modal-body">
 															
@@ -195,24 +195,26 @@
 								</thead>
 								<tbody>
 									
-									{% for playlist in embed_playlists %}
+									{% for key, value in playlists.iteritems()%}
 									<tr>
 										<td> Column content </td>
 										<td>
-											<button class="btn btn-primary btn-lg" data-toggle="modal" data-target="#myModal{{loop.index}}">
-											Launch demo modal
+											<button class="btn btn-primary btn-lg" data-toggle="modal" data-target="#myPlaylistModal{{loop.index}}">
+											{{key}}
 										</button><!-- Modal -->
-										<div class="modal fade" id="myModal{{loop.index}}" tabindex="-1" role="dialog" aria-labelledby="myModalLabel{{loop.index}}" aria-hidden="true">
+										<div class="modal fade" id="myPlaylistModal{{loop.index}}" tabindex="-1" role="dialog" aria-labelledby="myPlaylistModalLabel{{loop.index}}" aria-hidden="true">
 											<div class="modal-dialog">
 												<div class="modal-content">
 													<div class="modal-header">
 														<button type="button" class="close" data-dismiss="modal" aria-hidden="true">
 															&times;
 														</button>
-														<h4 class="modal-title" id="myModalLabel{{loop.index}}">Modal title</h4>
+														<h4 class="modal-title" id="myPlaylistModalLabel{{loop.index}}">{{key}}</h4>
 													</div>
 													<div class="modal-body">
-														{{playlist}}
+														{% autoescape false %} 
+															{{value["embed"]}}
+														{% endautoescape %}
 													</div>
 													<div class="modal-footer">
 														<button type="button" class="btn btn-default" data-dismiss="modal">

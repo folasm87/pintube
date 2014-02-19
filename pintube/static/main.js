@@ -15,18 +15,23 @@ $(document).ready(function() {
 		$(".alert-info").alert('close');
 		$(".alert-success").show();
 	});
+
+	$(".modal-wide").on("show.bs.modal", function() {
+		var height = $(window).height() - 200;
+		$(this).find(".modal-body").css("max-height", height);
+	});
 	/*
-	function onYtEvent(payload) {
-		var logElement = document.getElementById('ytsubscribe-events-log');
-		if (payload.eventType == 'subscribe') {
-			logElement.innerHTML = 'You are subscribing to this channel'
-		} else if (payload.eventType == 'unsubscribe') {
-			logElement.innerHTML = 'You are unsubscribing from this channel'
-		}
-		if (window.console) {
-			window.console.log('ytsubscribe event: ', payload);
-		}
-	}*/
+	 function onYtEvent(payload) {
+	 var logElement = document.getElementById('ytsubscribe-events-log');
+	 if (payload.eventType == 'subscribe') {
+	 logElement.innerHTML = 'You are subscribing to this channel'
+	 } else if (payload.eventType == 'unsubscribe') {
+	 logElement.innerHTML = 'You are unsubscribing from this channel'
+	 }
+	 if (window.console) {
+	 window.console.log('ytsubscribe event: ', payload);
+	 }
+	 }*/
 
 });
 
@@ -66,4 +71,4 @@ $(document).ready(function() {
 			});
 		}
 	});
-})(jQuery);
+})(jQuery); 
