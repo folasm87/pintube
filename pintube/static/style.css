@@ -148,9 +148,13 @@ th, td{
  http://dawsonmediadesign.com/blog/development/creating-a-variable-width-modal-dialog-using-bootstrap-3/
  
  */
-.modal.modal-wide .modal-dialog {
-  width: 90%;
+
+.modal-wide .modal-dialog {
+  width: 80%;
 }
+
+/*
 .modal-wide .modal-body {
   overflow-y: auto;
 }
+*/
