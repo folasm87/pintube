@@ -106,7 +106,7 @@ def index():
     if "token" in request.args:
         print "Got Back Token!"
         authsub_token = request.args.get("token")
-        authsub_token = str(authsub_token)
+        # authsub_token = str(authsub_token)
         # print "Current Page is %s" % request.url
         # temp_token = gdata.service.ExtractToken(request.url)
         # temp_token = temp_token[0]

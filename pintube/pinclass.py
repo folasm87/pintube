@@ -18,6 +18,8 @@ from gdata import apps
 from gdata import client
 from gdata import gauth
 
+
+from flask import Markup
 from pintube import db
 from pintube import models
 from models import User
@@ -55,20 +57,20 @@ class Pintube(object):
 
     def UpgradeToSessionToken(self, token=None):
         print "Current token is %s" % self.youtube_service.current_token
-        return self.youtube_service.upgrade_to_session_token(self.youtube_service.GetAuthSubToken())
-        # return self.youtube_service.UpgradeToSessionToken(token)
+        # return self.youtube_service.upgrade_to_session_token(self.youtube_service.GetAuthSubToken())
+        return self.youtube_service.UpgradeToSessionToken()
 
     vid_id_pattern = r"""youtu(?:\.be|be\.com)/(?:.*v(?:/|=)|(?:.*/)?)([a-zA-Z0-9-_]+)"""
     def get_video_id(self, vid_url):
         print "Video URL is %s" % vid_url
-        return re.search(vid_id_pattern, vid_url).group(1)
+        return re.search(self.vid_id_pattern, vid_url).group(1)
 
     playlist_id_pattern = r"""([a-zA-Z0-9_\-]{11,100})"""  # r"""([a-zA-Z0-9_\-]{18})"""
     def get_playlist_id(self, playlist_url=None, playlist_entry=None):
         id = ''
         if playlist_url:
             print "Playlist URL is %s" % playlist_url
-            id = re.search(playlist_id_pattern, playlist_url).group(0)
+            id = re.search(self.playlist_id_pattern, playlist_url).group(0)
             print "Playlist URL %s has an id : %s" % (playlist_url, id)
 
         else:
@@ -272,8 +274,8 @@ class Pintube(object):
             for post in posts:
                 url = post[u'href']
                 tags = post[u'tags']
-                if re.search(video_pattern, url):
-                    video_id = get_video_id(url)
+                if re.search(self.video_pattern, url):
+                    video_id = self.get_video_id(url)
                     print "Video ID is %s" % video_id
                     try:
                         video_entry = self.get_video_entry(vid_id=video_id)
@@ -305,7 +307,8 @@ class Pintube(object):
                         elif tag != "youtube":
                             tags_for_vids.setdefault(tag, [url])
                     """
-                elif re.search(playlist_pattern, url):
+
+                elif re.search(self.playlist_pattern, url):
                     playlist_id = self.get_playlist_id(playlist_url=url)
                     print "Playlist ID: %s" % playlist_id
 
@@ -315,11 +318,10 @@ class Pintube(object):
                         print error
                         print "Playlist Error!"
                         continue
-                    playlist_details = {"url":url, "embed":get_embed_playlist(playlist_id)}
+                    playlist_details = {"url":url, "embed":self.get_embed_playlist(playlist_id)}
                     db_playlists.setdefault(playlist_name, playlist_details)
                     # playlists.append(url)
-
-                elif re.search(channel_pattern, url):
+                elif re.search(self.channel_pattern, url):
                     subscription_id = self.get_subscription_id(url)
                     try:
                         subscription_name = self.get_subscription_name(sub_id=subscription_id)
@@ -327,7 +329,7 @@ class Pintube(object):
                         print error
                         print "Subscription Error!"
                         continue
-                    subscription_details = {"url":url, "embed":get_embed_subscription(subscription_id)}
+                    subscription_details = {"url":url, "embed":self.get_embed_subscription(subscription_id)}
                     db_subscriptions.setdefault(subscription_name, subscription_details)
                     # channels.append(url)
 
