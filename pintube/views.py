@@ -119,6 +119,7 @@ def index():
         # pintube_object.youtube_service.UpgradeToSessionToken()
         # pintube_object.youtube_service.upgrade_to_session_token(authsub_token)
         has_youtube = True
+        pintube_object.get_youtube_data()
         print "Successfully upgraded token!"
 
     if has_youtube and has_pinboard:
@@ -158,7 +159,7 @@ def index():
                 for vid in pinboard_data["vid_tags"][tag]:
                     vid = str(vid)
                     vid = re.search(url_pattern, vid).group(0)
-                    vids = your_playlists[tag][1]
+                    vids = your_playlists[tag][1] #=> playlist_entry_id
 
                     if vid not in vids.values():  # Insufficient to check for already present video
                         vid_id = get_video_id(vid)
@@ -170,5 +171,5 @@ def index():
         playlists = user.info.pinboard_playlists
         subscriptions = user.info.pinboard_subscriptions
         print "Testing User Here: %s" % user
-        return render_template('index.html', has_youtube=has_youtube, has_pinboard=has_pinboard, videos=videos, playlists=playlists, subscriptions=subscriptions)
+        return render_template('index.html', has_youtube=has_youtube, has_pinboard=has_pinboard, videos=videos, playlists=playlists, subscriptions=subscriptions, pintube_object=pintube_object)
     return render_template('index.html', has_youtube=has_youtube, has_pinboard=has_pinboard)

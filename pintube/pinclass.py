@@ -33,14 +33,16 @@ class Pintube(object):
     pinboard_object_data = {}
     # youtube_service = None
     user = None
+    youtube_data = {}
 
 
-    def __init__(self):  # , username):
+    def __init__(self):
         # Initializing GData YouTubeService object so that we can communicate with the YouTube API
         self.youtube_service = gdata.youtube.service.YouTubeService()
         self.youtube_service.ssl = True
         self.youtube_service.developer_key = 'AI39si5JGdicli8WGHhzGfW07rvFHMmlLJMtpB1zx3rpBhaBruxL4wkqGFPkQ0Dj2MDFObGCsR_wphhr3N9QpyTUOH9y_aeWsQ'
         self.youtube_service.source = 'PinTube'
+        # self.youtube_data = self.get_youtube_data()
         # self.user = User.query.filter(User.username == username).first()
 
     # ##@classmethod
@@ -60,34 +62,82 @@ class Pintube(object):
         # return self.youtube_service.upgrade_to_session_token(self.youtube_service.GetAuthSubToken())
         return self.youtube_service.UpgradeToSessionToken()
 
+    video_url_pattern = r"""(http(s?)://www.youtube.com/watch+\Wv\W[a-zA-Z0-9-_]+)"""
+    def get_youtube_data(self):
+        playlists = {}
+        p_feed = self.get_user_playlist_feed()
+        for p_entry in p_feed.entry:
+            p_id = p_entry.id.text.split('/')[-1]
+            p_title = p_entry.title.text
+            v_feed = self.get_playlist_video_feed(p_id)
+            videos = {}
+            number_of_vids = {}
+            i = 0
+            print ""
+            print "_"*30
+            print "Your Youtube Account has a playlist [%s] with id [%s] ->" % (p_title, p_id)
+
+
+            for v_entry in v_feed.entry:
+                v_title = v_entry.title.text
+                v_uri = v_entry.id.text  # .split('/')[-1]
+                print "Video Title = [%s],  URI = [%s]" % (v_title, v_uri)
+                video_entry = self.get_video_entry(video_uri=v_uri)
+
+                # video_entry = self.youtube_service.GetYouTubeVideoEntry(v_uri)
+                i += 1
+                video_data = {}
+
+                if (video_entry.media.player is not None):
+                    media_url = video_entry.media.player.url
+                    print "Media URL is %s" % media_url
+                    media_url = re.search(self.video_url_pattern, media_url).group(0)
+                    video_data = {"video_url": media_url, "video_uri": v_uri}
+                else:
+                    video_data = {"video_url": None, "video_uri": v_uri}
+
+                videos.setdefault(v_title, video_data)
+
+                print "It has a video [%s] at url [%s] with uri [%s]" % (v_title, video_data["video_url"], video_data["video_uri"])
+
+            print "Playlist [%s] has [%s] videos" % (p_title, i)
+            print ""
+            print "_"*30
+            # number_of_vids = {"number":i}
+            playlist = {"number_of_vids": number_of_vids, "videos": videos}
+            playlists.setdefault(p_title, playlist)
+
+        self.youtube_data = playlists
+
+
     vid_id_pattern = r"""youtu(?:\.be|be\.com)/(?:.*v(?:/|=)|(?:.*/)?)([a-zA-Z0-9-_]+)"""
     def get_video_id(self, vid_url):
-        print "Video URL is %s" % vid_url
+        # print "Video URL is %s" % vid_url
         return re.search(self.vid_id_pattern, vid_url).group(1)
 
     playlist_id_pattern = r"""([a-zA-Z0-9_\-]{11,100})"""  # r"""([a-zA-Z0-9_\-]{18})"""
     def get_playlist_id(self, playlist_url=None, playlist_entry=None):
         id = ''
         if playlist_url:
-            print "Playlist URL is %s" % playlist_url
+            # print "Playlist URL is %s" % playlist_url
             id = re.search(self.playlist_id_pattern, playlist_url).group(0)
-            print "Playlist URL %s has an id : %s" % (playlist_url, id)
+            # print "Playlist URL %s has an id : %s" % (playlist_url, id)
 
         else:
             id = playlist_entry.id.text.split('/')[-1]
-            print "Playlist ID for the given Playlist Entry is %s" % id
+            # print "Playlist ID for the given Playlist Entry is %s" % id
         return id  # re.search(playlist_id_pattern, playlist_url).group(0)
 
     def get_subscription_id(self, sub_url):
-        print "Subscription URL is %s" % sub_url
+        # print "Subscription URL is %s" % sub_url
         prev = None
         for part in sub_url.split('/'):
             if prev == 'user':
-                print "Subscription ID is %s" % part
+                # print "Subscription ID is %s" % part
                 return part
             prev = part
         raise ValueError('Could not find user in url')
-        print "Subscription ID is None"
+        # print "Subscription ID is None"
         return None
 
 
@@ -98,7 +148,7 @@ class Pintube(object):
     def get_playlist_name(self, playlist_id=None, playlist_entry=None):
         if (playlist_id):
             uri = 'https://gdata.youtube.com/feeds/api/playlists/' + playlist_id
-            print "Playlist URI: %s" % uri
+            # print "Playlist URI: %s" % uri
             return self.youtube_service.GetYouTubePlaylistFeed(uri).title.text
         elif(playlist_entry):
             return playlist_entry.title.text
@@ -109,29 +159,31 @@ class Pintube(object):
         if (sub_id):
             uri = "https://gdata.youtube.com/feeds/api/users/" + sub_id
             title = self.youtube_service.GetYouTubeSubscriptionEntry(uri).title.text
-            print "Subscription URI is %s" % uri
-            print "Subscription Title is %s" % title
+            # print "Subscription URI is %s" % uri
+            # #print "Subscription Title is %s" % title
             return title
         elif(sub_entry):
             title = sub_entry.title.text
-            print "Subscription Title is %s" % title
+            # print "Subscription Title is %s" % title
             return title
         return None
 
     # @classmethod
-    def get_video_entry(self, video_entry=None, vid_id=None):
-        if vid_id:
-            return self.youtube_service.GetYouTubeVideoEntry(video_id=vid_id)
+    def get_video_entry(self, video_entry=None, video_id=None, video_uri=None):
+        if video_id:
+            return self.youtube_service.GetYouTubeVideoEntry(video_id=video_id)
+        elif video_uri:
+            return self.youtube_service.GetYouTubeVideoEntry(uri=video_uri)
         elif video_entry:
-            vid_id = video_entry.id.text
-            return self.youtube_service.GetYouTubeVideoEntry(video_id=vid_id)
+            video_id = video_entry.id.text
+            return self.youtube_service.GetYouTubeVideoEntry(video_id=video_id)
         return None
 
     # @classmethod
     def get_playlist_entry(self, playlist_entry=None, playlist_id=None):
         """
         if playlist_id:
-            print "Playlist ID is %s" % playlist_id
+            #print "Playlist ID is %s" % playlist_id
             # playlist_id = playlist_id.replace('PL', '')
             uri = "https://gdata.youtube.com/feeds/api/playlists/{0}".format(playlist_id)
             result = service.GetYouTubePlaylistEntry(uri)
@@ -229,7 +281,7 @@ class Pintube(object):
             xml = gzipper.read()
             xml = minidom.parseString(xml)
             xml = xml.firstChild.getAttribute("time")
-            # print "XML is: %s" % xml
+            # #print "XML is: %s" % xml
         except urllib2.URLError, e:
             raise e
 
@@ -241,7 +293,7 @@ class Pintube(object):
 
         try:
             p = pinboard.open(username=usern, password=passw)
-            print "Get Pinboard returns " + str(p)
+            # print "Get Pinboard returns " + str(p)
         except urllib2.HTTPError, error:
             print error
             return {"Pass": False}
@@ -276,9 +328,9 @@ class Pintube(object):
                 tags = post[u'tags']
                 if re.search(self.video_pattern, url):
                     video_id = self.get_video_id(url)
-                    print "Video ID is %s" % video_id
+                    # print "Video ID is %s" % video_id
                     try:
-                        video_entry = self.get_video_entry(vid_id=video_id)
+                        video_entry = self.get_video_entry(video_id=video_id)
 
                     except RequestError, error:
                         print error
@@ -286,7 +338,7 @@ class Pintube(object):
                         continue
 
                     video_name = self.get_video_name(video_entry)
-                    print "Video Name is %s" % video_name
+                    # print "Video Name is %s" % video_name
                     if url is None:
                         print "Video URL is NONE"
 
@@ -310,7 +362,7 @@ class Pintube(object):
 
                 elif re.search(self.playlist_pattern, url):
                     playlist_id = self.get_playlist_id(playlist_url=url)
-                    print "Playlist ID: %s" % playlist_id
+                    # print "Playlist ID: %s" % playlist_id
 
                     try:
                         playlist_name = self.get_playlist_name(playlist_id)
