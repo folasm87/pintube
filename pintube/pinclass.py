@@ -6,6 +6,7 @@ import urllib
 import urllib2
 import httplib2
 import StringIO
+import pprint
 from xml.dom import minidom
 
 import pinboard
@@ -26,6 +27,8 @@ from models import User
 from models import Info
 from sqlalchemy.exc import IntegrityError
 
+reload(sys)
+sys.setdefaultencoding('utf-8')
 
 class Pintube(object):
 
@@ -106,6 +109,9 @@ class Pintube(object):
             # number_of_vids = {"number":i}
             playlist = {"number_of_vids": number_of_vids, "videos": videos}
             playlists.setdefault(p_title, playlist)
+
+
+        pprint.pprint(playlists)
 
         self.youtube_data = playlists
 

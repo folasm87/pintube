@@ -2,6 +2,18 @@
 
 {% block content %}
 
+<script type="text/javascript">
+	function add_video_to_playlist(video_id, playlist_id)
+	{
+		
+		pintube_object.add_video_to_playlist(video_id, playlist_id, 1)
+		
+	}
+	
+	
+</script>
+
+
 <h2>PinTube</h2>
 
 <div class="row">
@@ -24,6 +36,7 @@
 
 					<!-- Tab panes -->
 					{% if has_youtube and has_pinboard %}
+					{% set youtube_data = pintube_object.youtube_data %}
 					<div class="tab-content faq-cat-content">
 						<div class="tab-pane active in fade" id="faq-cat-1">
 							<!-- Video Table Information -->
@@ -45,20 +58,26 @@
 									{% for key, value in videos.iteritems() %}
 									<tr>
 										<td>
+											<form  role="form">
+										<div class="input-group form-group">
 										  <div class="input-group-btn">
-										    <button type="button" class="btn btn-default"> Playlist: </button> 
-										  	<ul class="dropdown-menu">
-										  	<!--
-									          <li><a href="#">Action</a></li>
-									          <li><a href="#">Another action</a></li>
-									          <li><a href="#">Something else here</a></li>
-									         -->
-									          <li><a href="#">Separated link</a></li>
-									          <li class="divider"></li>
+										    <button type="button" class="btn btn-default">Playlist: </button>
+										    <span class="caret dropdown-toggle" data-toggle="dropdown"></span>
+										  	<ul class="dropdown-menu" id="playlist-add">
+									          {% for key in pintube_object.youtube_data.iteritems() %}
+									          	{% set temp = key %}
+									          		
+									          			<li><a href="#">{{temp[0]}}</a></li>
+									          			<li class="divider"></li>
+									          		
+									          {% endfor %}
 									        </ul>
 										  </div>
-										  <input type="text" class="form-control">
+										  </div>
+										  
+										  <input type="text" class="form-control" id="playlistOption">
 										  <input class="btn btn-lg btn-primary btn-block" type="submit" value="Add Video">
+										 </form>
 										</td>
 										<td><!-- Video -->
 										<button class="btn btn-primary btn-lg" data-toggle="modal" data-target="#myVideoModal{{loop.index}}">

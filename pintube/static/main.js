@@ -20,6 +20,15 @@ $(document).ready(function() {
 		var height = $(window).height() - 200;
 		$(this).find(".modal-body").css("max-height", height);
 	});
+	
+	$("#playlist-add li a").click(function(){
+		var text = $(this).text()
+		var playlists = $("#playlistOption").val()
+		playlists += text
+		playlists += ", "
+		
+		$("#playlistOption").val(playlists)
+	});	
 	/*
 	 function onYtEvent(payload) {
 	 var logElement = document.getElementById('ytsubscribe-events-log');
