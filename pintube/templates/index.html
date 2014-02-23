@@ -44,7 +44,21 @@
 								<tbody>
 									{% for key, value in videos.iteritems() %}
 									<tr>
-										<td> Column content </td>
+										<td>
+										  <div class="input-group-btn">
+										    <button type="button" class="btn btn-default"> Add Video to Playlist: </button> 
+										  	<ul class="dropdown-menu">
+										  	<!--
+									          <li><a href="#">Action</a></li>
+									          <li><a href="#">Another action</a></li>
+									          <li><a href="#">Something else here</a></li>
+									         -->
+									          <li class="divider"></li>
+									          <li><a href="#">Separated link</a></li>
+									        </ul>
+										  </div>
+										  <input type="text" class="form-control">
+										</td>
 										<td><!-- Video -->
 										<button class="btn btn-primary btn-lg" data-toggle="modal" data-target="#myVideoModal{{loop.index}}">
 											{{key}}
@@ -59,9 +73,7 @@
 														<h4 class="modal-title" id="myVideoModalLabel{{loop.index}}">{{key}}</h4>
 													</div>
 													<div class="modal-body">
-
 														{{value["url"]|oembed()}}
-
 													</div>
 													<div class="modal-footer">
 														<button type="button" class="btn btn-default" data-dismiss="modal">
@@ -73,7 +85,6 @@
 										</div></td>
 										<td> Column content </td>
 									</tr>
-
 									{% endfor %}
 								</tbody>
 							</table>
@@ -128,7 +139,6 @@
 										</div></td>
 										<td> Column content </td>
 									</tr>
-
 									{% endfor %}
 								</tbody>
 							</table>
@@ -151,9 +161,11 @@
 								<tbody>
 									{% for key, value in subscriptions.iteritems()%}
 									<tr><!-- Subscription -->
-										<td> {% autoescape false %}
-										{{value["embed"]}}
-										{% endautoescape %} </td>
+										<td> 
+											{% autoescape false %}
+											{{value["embed"]}}
+											{% endautoescape %} 
+										</td>
 									</tr>
 									{% endfor %}
 								</tbody>
