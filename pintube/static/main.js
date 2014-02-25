@@ -9,26 +9,50 @@ $(document).ready(function() {
 		$('a[href="#' + id + '"]').closest('.panel-heading').removeClass('active-faq');
 		$('a[href="#' + id + '"] .panel-title span').html('<i class="glyphicon glyphicon-plus"></i>');
 	});
-	$('.table').tableAddCounter();
+	
+	
+	//$('.table').tableAddCounter();
 	$.getScript("http://code.jquery.com/ui/1.9.2/jquery-ui.js").done(function(script, textStatus) {
-		$('tbody').sortable();
+		//$('tbody').sortable();
 		$(".alert-info").alert('close');
 		$(".alert-success").show();
 	});
+	
 
 	$(".modal-wide").on("show.bs.modal", function() {
 		var height = $(window).height() - 200;
 		$(this).find(".modal-body").css("max-height", height);
 	});
 	
+	
 	$("#playlist-add li a").click(function(){
 		var text = $(this).text()
-		var playlists = $("#playlistOption").val()
-		playlists += text
-		playlists += ", "
+		//text += "\u00A0"
 		
-		$("#playlistOption").val(playlists)
+		//$("#playlist_option").tagit("createTag", text);
+		
+		//$("#playlist_option").hide()
+		document.getElementById("playlist_option").style.visibility = "hidden";
+		console.log(text);
+		
+		$("#playlist_option").data('tagit').tagInput.val(text)
+		
+		//var playlists = $("#playlist_option").val()
+		//console.log("Playlist text is:" + playlists)
+		//playlists += text
+		//$("#playlist_option").val(playlists)
+		//var temp = $("#playlist_option").val()
+		//console.log("Playlist text is:" + temp)
 	});	
+	
+	$("#playlist_option").tagit({
+		allowSpaces: true
+	});
+	
+	//$("#playlist_option").hide()
+	document.getElementById("playlist_option").style.visibility = "hidden";
+	
+	
 	/*
 	 function onYtEvent(payload) {
 	 var logElement = document.getElementById('ytsubscribe-events-log');
@@ -38,12 +62,17 @@ $(document).ready(function() {
 	 logElement.innerHTML = 'You are unsubscribing from this channel'
 	 }
 	 if (window.console) {
+	 	
 	 window.console.log('ytsubscribe event: ', payload);
 	 }
+	 
+	 
+	 text += "\u00A0"
+	 
 	 }*/
 
 });
-
+/*
 (function($) {
 	$.fn.extend({
 		tableAddCounter : function(options) {
@@ -81,3 +110,5 @@ $(document).ready(function() {
 		}
 	});
 })(jQuery); 
+
+*/

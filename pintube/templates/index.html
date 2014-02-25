@@ -3,16 +3,24 @@
 {% block content %}
 
 <script type="text/javascript">
-	function add_video_to_playlist(video_id, playlist_id)
-	{
-		
+	function add_video_to_playlist(video_id, playlist_id) {
+
 		pintube_object.add_video_to_playlist(video_id, playlist_id, 1)
-		
+
 	}
 	
-	
-</script>
+	/*
+	function copy_playlist(tags, current_playlist_id){
+		
+		for tag in tags{
+			
+			pintube_object.copy_playlist(tag, current_playlist_id)
+			
+		}
+	}
+	*/
 
+</script>
 
 <h2>PinTube</h2>
 
@@ -51,59 +59,67 @@
 									<tr>
 										<th class="td-actions"> Add Video? </th>
 										<th> Pinboard Youtube Videos </th>
-										<th> Column heading </th>
 									</tr>
 								</thead>
 								<tbody>
 									{% for key, value in videos.iteritems() %}
 									<tr>
+										<!-- Add Video to Playlist(s) -->
 										<td>
-											<form  role="form">
-										<div class="input-group form-group">
-										  <div class="input-group-btn">
-										    <button type="button" class="btn btn-default">Playlist: </button>
-										    <span class="caret dropdown-toggle" data-toggle="dropdown"></span>
-										  	<ul class="dropdown-menu" id="playlist-add">
-									          {% for key in pintube_object.youtube_data.iteritems() %}
-									          	{% set temp = key %}
-									          		
-									          			<li><a href="#">{{temp[0]}}</a></li>
-									          			<li class="divider"></li>
-									          		
-									          {% endfor %}
-									        </ul>
-										  </div>
-										  </div>
-										  
-										  <input type="text" class="form-control" id="playlistOption">
-										  <input class="btn btn-lg btn-primary btn-block" type="submit" value="Add Video">
-										 </form>
+											<fieldset>
+												<legend>
+													Select Playlists:
+												</legend>
+												<form  role="form">
+													<div class="input-group form-group">
+														<div class="input-group-btn">
+															<button type="button" class="btn btn-default dropdown-toggle" id="playlistDropDown" data-toggle="dropdown">
+																Current Playlists: 
+																<span class="caret"></span>
+															</button>
+	
+															<ul class="dropdown-menu" id="playlist-add" aria-labelledby="playlistDropDown">
+																{% for key in pintube_object.youtube_data.iteritems() %}
+																	{% set temp = key %}
+																	<li>
+																		<a href="#">{{temp[0]}}</a>
+																	</li>
+																	<li class="divider"></li>
+																{% endfor %}
+															</ul>
+														</div>
+													</div>
+													<input type="text" class="form-control" id="playlist_option", name="playlist_option">
+													<input class="btn btn-lg btn-primary btn-block" type="submit" value="Add Video">
+												</form>
+											</fieldset>
 										</td>
-										<td><!-- Video -->
-										<button class="btn btn-primary btn-lg" data-toggle="modal" data-target="#myVideoModal{{loop.index}}">
-											{{key}}
-										</button>
-										<div class="modal fade  modal-wide" id="myVideoModal{{loop.index}}" tabindex="-1" role="dialog" aria-labelledby="myVideoModalLabel{{loop.index}}" aria-hidden="true">
-											<div class="modal-dialog">
-												<div class="modal-content">
-													<div class="modal-header">
-														<button type="button" class="close" data-dismiss="modal" aria-hidden="true">
-															&times;
-														</button>
-														<h4 class="modal-title" id="myVideoModalLabel{{loop.index}}">{{key}}</h4>
-													</div>
-													<div class="modal-body">
-														{{value["url"]|oembed()}}
-													</div>
-													<div class="modal-footer">
-														<button type="button" class="btn btn-default" data-dismiss="modal">
-															Close
-														</button>
+										<!-- Video -->
+										<td>
+											<button class="btn btn-primary btn-lg" data-toggle="modal" data-target="#myVideoModal{{loop.index}}">
+												{{key}}
+											</button>
+											<div class="modal fade  modal-wide" id="myVideoModal{{loop.index}}" tabindex="-1" role="dialog" aria-labelledby="myVideoModalLabel{{loop.index}}" aria-hidden="true">
+												<div class="modal-dialog">
+													<div class="modal-content">
+														<div class="modal-header">
+															<button type="button" class="close" data-dismiss="modal" aria-hidden="true">
+																&times;
+															</button>
+															<h4 class="modal-title" id="myVideoModalLabel{{loop.index}}">{{key}}</h4>
+														</div>
+														<div class="modal-body">
+															{{value["url"]|oembed()}}
+														</div>
+														<div class="modal-footer">
+															<button type="button" class="btn btn-default" data-dismiss="modal">
+																Close
+															</button>
+														</div>
 													</div>
 												</div>
 											</div>
-										</div></td>
-										<td> Column content </td>
+										</td>
 									</tr>
 									{% endfor %}
 								</tbody>
@@ -123,41 +139,54 @@
 									<tr>
 										<th class="td-actions"> Copy Playlist? </th>
 										<th> Pinboard Youtube Playlists </th>
-										<th> Column heading </th>
+										
 									</tr>
 								</thead>
 								<tbody>
 
 									{% for key, value in playlists.iteritems()%}
 									<tr>
-										<td> Column content </td>
-										<td><!-- Playlist -->
-										<button class="btn btn-primary btn-lg" data-toggle="modal" data-target="#myPlaylistModal{{loop.index}}">
-											{{key}}
-										</button>
-										<div class="modal fade modal-wide" id="myPlaylistModal{{loop.index}}" tabindex="-1" role="dialog" aria-labelledby="myPlaylistModalLabel{{loop.index}}" aria-hidden="true">
-											<div class="modal-dialog">
-												<div class="modal-content">
-													<div class="modal-header">
-														<button type="button" class="close" data-dismiss="modal" aria-hidden="true">
-															&times;
-														</button>
-														<h4 class="modal-title" id="myPlaylistModalLabel{{loop.index}}">{{key}}</h4>
-													</div>
-													<div class="modal-body">
-														{% autoescape false %}
-														{{value["embed"]}}
-														{% endautoescape %}
-													</div>
-													<div class="modal-footer">
-														<button type="button" class="btn btn-default" data-dismiss="modal">
-															Close
-														</button>
+										<!-- Copy Playlist? -->
+										<td>
+											<fieldset>
+												<legend>
+													Title of New Playlist:
+												</legend>
+												<form role="form">
+													<input type="text" class="form-control" id="playlist_name", name="playlist_name" value="{{key}}">
+													<input class="btn btn-lg btn-primary btn-block" type="submit" value="Copy Playlist">
+												</form>
+											</fieldset>
+										</td>
+										<!-- Playlist -->
+										<td>
+											<button class="btn btn-primary btn-lg" data-toggle="modal" data-target="#myPlaylistModal{{loop.index}}">
+												{{key}}
+											</button>
+											<div class="modal fade modal-wide" id="myPlaylistModal{{loop.index}}" tabindex="-1" role="dialog" aria-labelledby="myPlaylistModalLabel{{loop.index}}" aria-hidden="true">
+												<div class="modal-dialog">
+													<div class="modal-content">
+														<div class="modal-header">
+															<button type="button" class="close" data-dismiss="modal" aria-hidden="true">
+																&times;
+															</button>
+															<h4 class="modal-title" id="myPlaylistModalLabel{{loop.index}}">{{key}}</h4>
+														</div>
+														<div class="modal-body">
+															{% autoescape false %}
+															{{value["embed"]}}
+															{% endautoescape %}
+														</div>
+														<div class="modal-footer">
+															<button type="button" class="btn btn-default" data-dismiss="modal">
+																Close
+															</button>
+														</div>
 													</div>
 												</div>
 											</div>
-										</div></td>
-										<td> Column content </td>
+										</td>
+										
 									</tr>
 									{% endfor %}
 								</tbody>
@@ -180,7 +209,8 @@
 								</thead>
 								<tbody>
 									{% for key, value in subscriptions.iteritems()%}
-									<tr><!-- Subscription -->
+									<tr>
+										<!-- Subscription -->
 										<td> 
 											{% autoescape false %}
 											{{value["embed"]}}
