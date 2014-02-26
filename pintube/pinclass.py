@@ -85,7 +85,12 @@ class Pintube(object):
                 v_title = v_entry.title.text
                 v_uri = v_entry.id.text  # .split('/')[-1]
                 print "Video Title = [%s],  URI = [%s]" % (v_title, v_uri)
-                video_entry = self.get_video_entry(video_uri=v_uri)
+                try:
+                    video_entry = self.get_video_entry(video_uri=v_uri)
+                except RequestError, error:
+                        print error
+                        print "Video Entry Error!"
+                        continue
 
                 # video_entry = self.youtube_service.GetYouTubeVideoEntry(v_uri)
                 i += 1
@@ -107,7 +112,7 @@ class Pintube(object):
             print ""
             print "_"*30
             # number_of_vids = {"number":i}
-            playlist = {"number_of_vids": number_of_vids, "videos": videos}
+            playlist = {"number_of_vids": i, "videos": videos}
             playlists.setdefault(p_title, playlist)
 
 

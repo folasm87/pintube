@@ -26,16 +26,39 @@ $(document).ready(function() {
 	
 	
 	$("#playlist-add li a").click(function(){
-		var text = $(this).text()
+		var text = $(this).text();
+		pattern = /(\(\d+\))/;
+		//pattern2 = /\D+/;
+		text = text.split(pattern);
 		//text += "\u00A0"
 		
 		//$("#playlist_option").tagit("createTag", text);
 		
 		//$("#playlist_option").hide()
-		document.getElementById("playlist_option").style.visibility = "hidden";
-		console.log(text);
+		//document.getElementById("playlist_option").style.visibility = "hidden";
+		//console.log(text);
 		
-		$("#playlist_option").data('tagit').tagInput.val(text)
+		playlist = text[0];
+		//num = text[1];
+		//num = num.split("");
+		
+		/*
+		total = '';
+		for (i = 0; i < num.length; i++){
+			if ( (num[i] != "(") && (num[i] != ")") ){
+				total = total + num[i]	
+			}
+		}
+		
+		//num = num[1]
+		
+		
+		console.log(playlist);
+		console.log(total);
+		console.log(num);
+		
+		*/
+		$("#playlist_option").data('tagit').tagInput.val(playlist);
 		
 		//var playlists = $("#playlist_option").val()
 		//console.log("Playlist text is:" + playlists)
@@ -50,7 +73,7 @@ $(document).ready(function() {
 	});
 	
 	//$("#playlist_option").hide()
-	document.getElementById("playlist_option").style.visibility = "hidden";
+	//document.getElementById("playlist_option").style.visibility = "hidden";
 	
 	
 	/*

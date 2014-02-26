@@ -48,12 +48,15 @@
 					<div class="tab-content faq-cat-content">
 						<div class="tab-pane active in fade" id="faq-cat-1">
 							<!-- Video Table Information -->
+							<!--
 							<div class="alert alert-info">
 								Please Wait...
 							</div>
 							<div class="alert alert-success" style="display:none;">
 								<span class="glyphicon glyphicon-ok"></span> Drag table row and change Order
 							</div>
+							
+							-->
 							<table class="table table-striped table-bordered">
 								<thead>
 									<tr>
@@ -79,10 +82,10 @@
 															</button>
 	
 															<ul class="dropdown-menu" id="playlist-add" aria-labelledby="playlistDropDown">
-																{% for key in pintube_object.youtube_data.iteritems() %}
-																	{% set temp = key %}
+																{% for key2, value2 in pintube_object.youtube_data.iteritems() %}
+																	{% set temp = value2 %}
 																	<li>
-																		<a href="#">{{temp[0]}}</a>
+																		<a href="#">{{key2|e}} ({{value2["number_of_vids"]|e}})</a>
 																	</li>
 																	<li class="divider"></li>
 																{% endfor %}
@@ -128,12 +131,14 @@
 
 						<div class="tab-pane fade" id="faq-cat-2">
 							<!-- Playlist Table Information -->
+							<!--
 							<div class="alert alert-info">
 								Please Wait...
 							</div>
 							<div class="alert alert-success" style="display:none;">
 								<span class="glyphicon glyphicon-ok"></span> Drag table row and change Order
 							</div>
+							-->
 							<table class="table table-striped table-bordered">
 								<thead>
 									<tr>
@@ -195,12 +200,14 @@
 						</div>
 						<div class="tab-pane fade" id="faq-cat-3">
 							<!-- Subscription Table Information -->
+							<!--
 							<div class="alert alert-info">
 								Please Wait...
 							</div>
 							<div class="alert alert-success" style="display:none;">
 								<span class="glyphicon glyphicon-ok"></span> Drag table row and change Order
 							</div>
+							-->
 							<table class="table table-striped table-bordered">
 								<thead>
 									<tr>
