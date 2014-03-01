@@ -22,6 +22,7 @@ from gdata import gauth
 
 """
 
+import json
 import gdata
 import micawber
 from pinclass import Pintube
@@ -45,9 +46,14 @@ from pintube import db
 from pintube import models
 from pintube import login_manager
 from forms import Pinboard_Login_Form
+from forms import Copy_Playlist
+from forms import Add_Video
 from models import User
 from models import Info
 from sqlalchemy.exc import IntegrityError
+
+from jinja2 import Environment, FileSystemLoader
+
 
 """
 # Initializing GData, YouTubeService() used to generate the object so that we can communicate with the YouTube API
@@ -60,6 +66,16 @@ has_youtube = False
 has_pinboard = False
 authsub_token = ''
 pintube_object = Pintube()
+
+def copy_playlist(original_playlist_url, new_playlist_name):
+    return pintube_object.copy_playlist_to(original_playlist_url, new_playlist_name)
+
+def add_video_to_playlists(video_url, playlist_names):
+    for p_name in playlist_names:
+        return pintube_object.add_video_to_possible_playlists(video_url, playlist_name=p_name)
+
+
+
 
 @login_manager.user_loader
 def load_user(id):
@@ -97,9 +113,11 @@ def youtube_login():
     authSubUrl = pintube_object.GetAuthSubUrl()
     return redirect(authSubUrl)
 
-@app.route('/')
-@app.route('/index')
+@app.route('/', methods=['GET', 'POST'])
+@app.route('/index', methods=['GET', 'POST'])
 def index():
+    cp_form = Copy_Playlist()
+    add_form = Add_Video()
     global has_youtube
     global authsub_token
 
@@ -121,6 +139,18 @@ def index():
         has_youtube = True
         pintube_object.get_youtube_data()
         print "Successfully upgraded token!"
+
+
+    if (has_youtube and has_pinboard) and cp_form.validate_on_submit():
+        pintube_object.authsub_token = authsub_token
+        copy_playlist(cp_form.original_playlist_url.data, cp_form.new_playlist_name.data)
+
+
+    if (has_youtube and has_pinboard) and add_form.validate_on_submit():
+        playlists = json.loads(add_form.playlist_names.data)
+        video_url = add_form.video_url.data
+        print "Add Video URL is %s" % video_url
+        add_video_to_playlists(video_url, playlist_names=playlists)
 
     if has_youtube and has_pinboard:
         providers = micawber.bootstrap_basic()
@@ -166,10 +196,18 @@ def index():
                         playlist_id = your_playlists[tag][0].replace('PL', '')
                         post = add_video_to_playlist(vid_id, playlist_id, 1)
         """
+
         user = pintube_object.user  # User.query.filter_by(username=pinboard_object_data["username"]).first_or_404()
         videos = user.info.pinboard_videos
         playlists = user.info.pinboard_playlists
         subscriptions = user.info.pinboard_subscriptions
-        print "Testing User Here: %s" % user
-        return render_template('index.html', has_youtube=has_youtube, has_pinboard=has_pinboard, videos=videos, playlists=playlists, subscriptions=subscriptions, pintube_object=pintube_object)
+
+
+        env = Environment(loader=FileSystemLoader('/templates'))
+        env.globals['pintube_object'] = pintube_object
+        env.globals['copy_playlist'] = copy_playlist
+        env.globals['add_form'] = add_form
+
+        # print "Testing User Here: %s" % user
+        return render_template('index.html', has_youtube=has_youtube, has_pinboard=has_pinboard, videos=videos, playlists=playlists, subscriptions=subscriptions, pintube_object=pintube_object, cp_form=cp_form, add_form=add_form)
     return render_template('index.html', has_youtube=has_youtube, has_pinboard=has_pinboard)

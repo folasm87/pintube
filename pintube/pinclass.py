@@ -6,7 +6,7 @@ import urllib
 import urllib2
 import httplib2
 import StringIO
-import pprint
+# import pprint
 from xml.dom import minidom
 
 import pinboard
@@ -37,6 +37,7 @@ class Pintube(object):
     # youtube_service = None
     user = None
     youtube_data = {}
+    authsub_token = ''
 
 
     def __init__(self):
@@ -76,15 +77,15 @@ class Pintube(object):
             videos = {}
             number_of_vids = {}
             i = 0
-            print ""
-            print "_"*30
-            print "Your Youtube Account has a playlist [%s] with id [%s] ->" % (p_title, p_id)
+            # print ""
+            # print "_"*30
+            # print "Your Youtube Account has a playlist [%s] with id [%s] ->" % (p_title, p_id)
 
 
             for v_entry in v_feed.entry:
                 v_title = v_entry.title.text
                 v_uri = v_entry.id.text  # .split('/')[-1]
-                print "Video Title = [%s],  URI = [%s]" % (v_title, v_uri)
+                # print "Video Title = [%s],  URI = [%s]" % (v_title, v_uri)
                 try:
                     video_entry = self.get_video_entry(video_uri=v_uri)
                 except RequestError, error:
@@ -98,7 +99,7 @@ class Pintube(object):
 
                 if (video_entry.media.player is not None):
                     media_url = video_entry.media.player.url
-                    print "Media URL is %s" % media_url
+                    # print "Media URL is %s" % media_url
                     media_url = re.search(self.video_url_pattern, media_url).group(0)
                     video_data = {"video_url": media_url, "video_uri": v_uri}
                 else:
@@ -106,19 +107,86 @@ class Pintube(object):
 
                 videos.setdefault(v_title, video_data)
 
-                print "It has a video [%s] at url [%s] with uri [%s]" % (v_title, video_data["video_url"], video_data["video_uri"])
+                # print "It has a video [%s] at url [%s] with uri [%s]" % (v_title, video_data["video_url"], video_data["video_uri"])
 
-            print "Playlist [%s] has [%s] videos" % (p_title, i)
-            print ""
-            print "_"*30
+            # print "Playlist [%s] has [%s] videos" % (p_title, i)
+            # print ""
+            # print "_"*30
             # number_of_vids = {"number":i}
             playlist = {"number_of_vids": i, "videos": videos}
             playlists.setdefault(p_title, playlist)
 
 
-        pprint.pprint(playlists)
+        # pprint.pprint(playlists)
 
         self.youtube_data = playlists
+
+
+
+    def add_video_to_possible_playlists(self, video_url, playlist_name):
+        vid_id = self.get_video_id(video_url)
+        user_playlist_feed = self.get_user_playlist_feed()
+        p_exist = self.does_playlist_exist(playlist_name=playlist_name, user_playlist_feed=user_playlist_name)
+        if (p_exist["exist"]):
+            try:
+                self.add_video_to_playlist(vid_id, p_exist["id"], 1)
+            except RequestError, error:
+                print error
+                print "Adding Video to Already Existing Playlist Did Not Work"
+        else:
+            new_playlist = self.create_playlist(playlist_title=playlist_name, playlist_desc="A Pintube Playlist")
+            new_playlist_uri = self.get_playlist_id(playlist_entry=new_playlist)
+            new_playlist_entry = self.get_playlist_entry(playlist_entry=new_playlist_uri)
+            new_playlist_id = self.get_playlist_id(playlist_entry=new_playlist_entry)
+
+            try:
+                self.add_video_to_playlist(vid_id, new_playlist_id, 1)
+            except RequestError, error:
+                print error
+                print "Adding Video to A New Playlist Did Not Work"
+
+
+
+
+
+    def copy_playlist_to(self, original_playlist_url, new_playlist_name):
+        new_playlist = self.create_playlist(new_playlist_name, "A PinTube Playlist")
+        new_playlist_entry = self.get_playlist_entry(playlist_entry=new_playlist)  # self.get_playlist_id(playlist_entry=new_playlist)
+        sec_playlist_id = self.get_playlist_id(playlist_entry=new_playlist)
+        new_playlist_id = self.get_playlist_id(playlist_entry=new_playlist_entry)
+        original_playlist_id = self.get_playlist_id(playlist_url=original_playlist_url)
+        original_playlist_video_feed = self.get_playlist_video_feed(original_playlist_id)
+        # i = 1
+        for video_entry in original_playlist_video_feed.entry:
+            vid_entry = self.get_video_entry(video_uri=video_entry.id.text)
+            vid_id = vid_entry.id.text.split('/')[-1]
+            print "CP Video Entry ID is %s" % vid_id
+            print "CP Playlist ID is %s" % new_playlist_id
+            print "CP Second Playlist ID is %s" % sec_playlist_id
+            # self.add_video_to_playlist(vid_id, new_playlist_uri, 1)
+
+            try:
+                add_video = self.add_video_to_playlist(vid_id, new_playlist_id, 1)
+            except RequestError, error:
+                    print error
+                    print "Adding Video To Playlist Error!"
+                    continue
+            # i += 1
+
+
+
+
+
+
+
+    """
+    def add_video_to_playlist(self, video_id, playlist_uri):
+        return self.youtube_service.AddPlaylistVideoEntryToPlaylist(playlist_uri=playlist_uri, video_id=video_id)
+    """
+
+
+
+
 
 
     vid_id_pattern = r"""youtu(?:\.be|be\.com)/(?:.*v(?:/|=)|(?:.*/)?)([a-zA-Z0-9-_]+)"""
@@ -132,11 +200,11 @@ class Pintube(object):
         if playlist_url:
             # print "Playlist URL is %s" % playlist_url
             id = re.search(self.playlist_id_pattern, playlist_url).group(0)
-            # print "Playlist URL %s has an id : %s" % (playlist_url, id)
+            print "Playlist URL %s has an id : %s" % (playlist_url, id)
 
         else:
             id = playlist_entry.id.text.split('/')[-1]
-            # print "Playlist ID for the given Playlist Entry is %s" % id
+            print "Playlist ID/URI for the given Playlist Entry is %s" % id
         return id  # re.search(playlist_id_pattern, playlist_url).group(0)
 
     def get_subscription_id(self, sub_url):
@@ -235,10 +303,12 @@ class Pintube(object):
 
     # @classmethod
     def add_video_to_playlist(self, video_id, playlist_id, position):
-        url = 'https://gdata.youtube.com/feeds/api/playlists/%s?v=2' % playlist_id
+        url = 'https://gdata.youtube.com/feeds/api/playlists/{0}?v=2'.format(playlist_id)
+
+        print "authsub_token for adding video is %s" % self.authsub_token
 
         headers = {'Content-Type' : 'application/atom+xml',
-                   'Authorization' : 'Bearer %s' % authsub_token,
+                   'Authorization' : 'Bearer %s' % self.authsub_token,
                    'GData-Version' : '2',
                    'X-GData-Key' : '%s' % self.youtube_service.developer_key}
 
@@ -255,8 +325,16 @@ class Pintube(object):
     def is_vid_in_playlist(video_id, playlist_id):
         pass
 
-    def does_playlist_exist(playlist_id):
-        pass
+    def does_playlist_exist(self, user_playlist_feed, playlist_id=None, playlist_name=None):
+        for entry in user_playlist_feed.entry:
+            id = entry.id.text.split('/')[-1]
+            if playlist_name:
+                if entry.title.text == playlist_name:
+                    return {"exist":True, "id":id }
+            elif playlist_id:
+                if id == playlist_id:
+                    {"exist":True, "id":id }
+        return {"exist":False}
 
     def get_embed_playlist(self, playlist_id):
         to_embed = Markup("""<iframe id="ytplayer" type="text/html" width="640" height="360"
@@ -358,7 +436,7 @@ class Pintube(object):
                         tag = str(tag)
                         temp_tags.append(tag)
 
-                    video_details = {"url":url, "tags":temp_tags}
+                    video_details = {"url":url, "id":video_id, "tags":temp_tags}
 
                     db_videos.setdefault(video_name, video_details)
                     # videos.append(url)
@@ -381,7 +459,7 @@ class Pintube(object):
                         print error
                         print "Playlist Error!"
                         continue
-                    playlist_details = {"url":url, "embed":self.get_embed_playlist(playlist_id)}
+                    playlist_details = {"url":url, "id": playlist_id, "embed":self.get_embed_playlist(playlist_id)}
                     db_playlists.setdefault(playlist_name, playlist_details)
                     # playlists.append(url)
                 elif re.search(self.channel_pattern, url):
