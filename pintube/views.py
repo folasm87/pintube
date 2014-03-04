@@ -137,7 +137,7 @@ def index():
         # pintube_object.youtube_service.UpgradeToSessionToken()
         # pintube_object.youtube_service.upgrade_to_session_token(authsub_token)
         has_youtube = True
-        pintube_object.get_youtube_data()
+        # pintube_object.get_youtube_data()
         print "Successfully upgraded token!"
 
 
@@ -154,6 +154,7 @@ def index():
 
     if has_youtube and has_pinboard:
         providers = micawber.bootstrap_basic()
+        pintube_object.get_youtube_data()
 
         """
         your_playlists = {}
