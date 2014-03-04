@@ -22,7 +22,9 @@ from gdata import gauth
 
 from flask import Markup
 from pintube import db
+# from __init__ import db
 from pintube import models
+# import models
 from models import User
 from models import Info
 from sqlalchemy.exc import IntegrityError

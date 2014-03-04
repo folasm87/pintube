@@ -1,5 +1,6 @@
 import sqlalchemy
 from pintube import db
+# from __init__ import db
 from sqlalchemy import ForeignKey
 from sqlalchemy.types import TypeDecorator, VARCHAR
 from sqlalchemy.ext.mutable import Mutable
@@ -102,6 +103,8 @@ class Info(db.Model):
     pinboard_videos = db.Column(MutableDict.as_mutable(JSONEncodedDict), index=True)
     pinboard_playlists = db.Column(MutableDict.as_mutable(JSONEncodedDict), index=True)
     pinboard_subscriptions = db.Column(MutableDict.as_mutable(JSONEncodedDict), index=True)
+    youtube_videos = db.Column(MutableDict.as_mutable(JSONEncodedDict), index=True)
+    youtube_playlists = db.Column(MutableDict.as_mutable(JSONEncodedDict), index=True)
     user_id = db.Column(db.Integer, ForeignKey('user.id'))
 
 

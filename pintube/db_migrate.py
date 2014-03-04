@@ -1,8 +1,27 @@
 #!flask/bin/python
-import imp
-from migrate.versioning import api
-from pintube import db
+# import imp
+# from migrate.versioning import api
+# from pintube import db
+from flask import Flask
+from flask.ext.sqlalchemy import SQLAlchemy
+from __init__ import app
+from __init__ import db
+from flask.ext.script import Manager
+from flask.ext.migrate import Migrate, MigrateCommand
 from config import SQLALCHEMY_DATABASE_URI
+
+
+
+migrate = Migrate(app, db)
+
+manager = Manager(app)
+manager.add_command('db', MigrateCommand)
+
+if __name__ == '__main__':
+    manager.run()
+
+
+"""
 from config import SQLALCHEMY_MIGRATE_REPO
 migration = SQLALCHEMY_MIGRATE_REPO + '/versions/%03d_migration.py' % (api.db_version(SQLALCHEMY_DATABASE_URI, SQLALCHEMY_MIGRATE_REPO) + 1)
 tmp_module = imp.new_module('old_model')
@@ -13,3 +32,4 @@ open(migration, "wt").write(script)
 api.upgrade(SQLALCHEMY_DATABASE_URI, SQLALCHEMY_MIGRATE_REPO)
 print 'New migration saved as ' + migration
 print 'Current database version: ' + str(api.db_version(SQLALCHEMY_DATABASE_URI, SQLALCHEMY_MIGRATE_REPO))
+"""

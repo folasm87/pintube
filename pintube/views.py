@@ -45,6 +45,12 @@ from pintube import app
 from pintube import db
 from pintube import models
 from pintube import login_manager
+
+# from __init__ import app
+# from __init__ import db
+# from __init__ import login_manager
+# import models
+
 from forms import Pinboard_Login_Form
 from forms import Copy_Playlist
 from forms import Add_Video
