@@ -1,12 +1,23 @@
 import sqlalchemy
-from pintube import db
-# from __init__ import db
+# from pintube import db
+from __init__ import db
+from __init__ import app
 from sqlalchemy import ForeignKey
 from sqlalchemy.types import TypeDecorator, VARCHAR
 from sqlalchemy.ext.mutable import Mutable
+from flask.ext.restless import APIManager
 import json
 # from sqlalchemy import relationship, backref
 
+from flask.ext.admin import Admin, BaseView, expose
+from flask.ext.admin.contrib.sqla import ModelView
+
+
+
+class MyView(BaseView):
+    @expose('/')
+    def index(self):
+        return self.render('admin/index.html')
 
 
 class JSONEncodedDict(TypeDecorator):
@@ -103,15 +114,16 @@ class Info(db.Model):
     pinboard_videos = db.Column(MutableDict.as_mutable(JSONEncodedDict), index=True)
     pinboard_playlists = db.Column(MutableDict.as_mutable(JSONEncodedDict), index=True)
     pinboard_subscriptions = db.Column(MutableDict.as_mutable(JSONEncodedDict), index=True)
-    youtube_videos = db.Column(MutableDict.as_mutable(JSONEncodedDict), index=True)
+    # youtube_videos = db.Column(MutableDict.as_mutable(JSONEncodedDict), index=True)
     youtube_playlists = db.Column(MutableDict.as_mutable(JSONEncodedDict), index=True)
     user_id = db.Column(db.Integer, ForeignKey('user.id'))
 
 
-    def __init__(self, pinboard_videos, pinboard_playlists, pinboard_subscriptions):
+    def __init__(self, pinboard_videos, pinboard_playlists, pinboard_subscriptions, youtube_playlists):
         self.pinboard_videos = pinboard_videos
         self.pinboard_playlists = pinboard_playlists
         self.pinboard_subscriptions = pinboard_subscriptions
+        self.youtube_playlists = youtube_playlists
 
 
 
@@ -119,3 +131,13 @@ class Info(db.Model):
         return '<Info(%s, %s, %s)>' % (self.pinboard_videos, self.pinboard_playlists, self.pinboard_subscriptions)
 
 
+admin = Admin(app)
+admin.add_view(MyView(name='Hello'))
+admin.add_view(ModelView(User, db.session))
+"""
+db.create_all()
+
+api_manager = APIManager(app, flask_sqlalchemy_db=db)
+api_manager.create_api(User, methods=['GET', 'POST', 'DELETE', 'PUT'])
+api_manager.create_api(Info, methods=['GET', 'POST', 'DELETE', 'PUT'])
+"""

@@ -7,8 +7,7 @@ import StringIO
 import gzip
 from xml.dom import minidom
 
-import os
-import sys
+
 import re
 
 
@@ -21,7 +20,8 @@ from gdata import client
 from gdata import gauth
 
 """
-
+import os
+import sys
 import json
 import gdata
 import micawber
@@ -45,12 +45,12 @@ from pintube import app
 from pintube import db
 from pintube import models
 from pintube import login_manager
-
-# from __init__ import app
-# from __init__ import db
-# from __init__ import login_manager
-# import models
-
+"""
+from __init__ import app
+from __init__ import db
+from __init__ import login_manager
+import models
+"""
 from forms import Pinboard_Login_Form
 from forms import Copy_Playlist
 from forms import Add_Video
@@ -59,6 +59,8 @@ from models import Info
 from sqlalchemy.exc import IntegrityError
 
 from jinja2 import Environment, FileSystemLoader
+import flask_sijax
+import sijax
 
 
 """
@@ -68,17 +70,19 @@ youtube_service.ssl = True
 youtube_service.developer_key = 'AI39si5JGdicli8WGHhzGfW07rvFHMmlLJMtpB1zx3rpBhaBruxL4wkqGFPkQ0Dj2MDFObGCsR_wphhr3N9QpyTUOH9y_aeWsQ'
 youtube_service.source = 'PinTube'
 """
+
+sys.path.append(os.path.join('.', os.path.dirname(__file__), '../'))
+app.config['SIJAX_STATIC_PATH'] = os.path.join('.', os.path.dirname(__file__), 'static/js/sijax/')
+app.config['SIJAX_JSON_URI'] = '/static/js/sijax/json2.js'
+
+flask_sijax.Sijax(app)
+
+
 has_youtube = False
 has_pinboard = False
 authsub_token = ''
 pintube_object = Pintube()
 
-def copy_playlist(original_playlist_url, new_playlist_name):
-    return pintube_object.copy_playlist_to(original_playlist_url, new_playlist_name)
-
-def add_video_to_playlists(video_url, playlist_names):
-    for p_name in playlist_names:
-        return pintube_object.add_video_to_possible_playlists(video_url, playlist_name=p_name)
 
 
 
@@ -119,15 +123,45 @@ def youtube_login():
     authSubUrl = pintube_object.GetAuthSubUrl()
     return redirect(authSubUrl)
 
-@app.route('/', methods=['GET', 'POST'])
-@app.route('/index', methods=['GET', 'POST'])
+# @app.route('/', methods=['GET', 'POST'])
+# @app.route('/index', methods=['GET', 'POST'])
+@flask_sijax.route(app, "/")
+@flask_sijax.route(app, "/index")
 def index():
     cp_form = Copy_Playlist()
     add_form = Add_Video()
     global has_youtube
     global authsub_token
 
-    if "token" in request.args:
+    def say_hi(obj_response):
+        print "Hi there partner!"
+        obj_response.alert('Hi there!')
+
+
+    def copy_playlist(obj_response, original_playlist_url, new_playlist_name):
+        print "Playlist URL is %s" % original_playlist_url
+        print "Playlist Name is %s" % new_playlist_name
+        pintube_object.copy_playlist_to(original_playlist_url, new_playlist_name)
+        print "Copied Playlist"
+        obj_response.alert('Copied Playlist')
+
+    def add_video_to_playlists(obj_response, video_url, p_name):
+        print "Video URL is %s" % video_url
+        # print "Playlist Names are: "
+        # for p_name in playlist_names:
+        print "Playlist Name is %s" % p_name
+        pintube_object.add_video_to_possible_playlists(video_url, playlist_name=p_name)
+        print "Added Video to Playlist {0}".format(p_name)
+        obj_response.alert('Added Video to Playlist(s)')
+
+    if g.sijax.is_sijax_request:
+        # Sijax request detected - let Sijax handle it
+        g.sijax.register_callback('say_hi', say_hi)
+        g.sijax.register_callback('copy_playlist', copy_playlist)
+        g.sijax.register_callback('add_video', add_video_to_playlists)
+        return g.sijax.process_request()
+
+    if ("token" in request.args) and (not has_youtube):
         print "Got Back Token!"
         authsub_token = request.args.get("token")
         # authsub_token = str(authsub_token)
@@ -137,30 +171,39 @@ def index():
         # temp_token = str(temp_token)
         # print "Extract Token returns %s" % temp_token
         print "Token is %s" % authsub_token
+        pintube_object.authsub_token = authsub_token
         pintube_object.SetAuthSubToken(authsub_token)
         pintube_object.UpgradeToSessionToken()
         # pintube_object.youtube_service.SetAuthSubToken(authsub_token)
         # pintube_object.youtube_service.UpgradeToSessionToken()
         # pintube_object.youtube_service.upgrade_to_session_token(authsub_token)
         has_youtube = True
+
         # pintube_object.get_youtube_data()
         print "Successfully upgraded token!"
+        if has_pinboard:
+            pintube_object.get_pintubes()
 
-
+    """
     if (has_youtube and has_pinboard) and cp_form.validate_on_submit():
+        print "Copying Playlists"
         pintube_object.authsub_token = authsub_token
-        copy_playlist(cp_form.original_playlist_url.data, cp_form.new_playlist_name.data)
+
+        # copy_playlist(cp_form.original_playlist_url.data, cp_form.new_playlist_name.data)
 
 
-    if (has_youtube and has_pinboard) and add_form.validate_on_submit():
-        playlists = json.loads(add_form.playlist_names.data)
+    if (has_youtube and has_pinboard) and ("pnames" in request.args) and add_form.validate_on_submit():
+        print "Adding Video to Playlist(s)"
+        value = request.args.get('pnames')
+        # playlists = json.loads(add_form.playlist_names.data)
+        playlists = json.loads(value)
         video_url = add_form.video_url.data
         print "Add Video URL is %s" % video_url
         add_video_to_playlists(video_url, playlist_names=playlists)
-
+    """
     if has_youtube and has_pinboard:
         providers = micawber.bootstrap_basic()
-        pintube_object.get_youtube_data()
+        # pintube_object.get_youtube_data()
 
         """
         your_playlists = {}

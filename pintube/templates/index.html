@@ -19,23 +19,34 @@
 	}
 
 	function set_values() {
-
+		
 		
 		//var add_form = {{add_form}}
 		var playlist_names = $("#playlist_option").tagit("assignedTags");
+		
+		//debugger;
 
 		playlist_names = JSON.stringify(playlist_names)
-		{% set pnames = playlist_names %}
+		//debugger;
 		
-
+		
+		
+		
+		
+		
+		//debugger;
 	}
 
 
 </script>
+<script type="text/javascript" src="/static/js/sijax/sijax.js"></script>
+<script type="text/javascript">
+    {{ g.sijax.get_js()|safe }}
+</script>
 
 <h2>PinTube</h2>
-
 <div class="row">
+	<a href="javascript://" onclick="Sijax.request('say_hi');">Click here</a>
 	<div class="col-md-4">
 		<div class="container">
 			<div class="row">
@@ -84,15 +95,14 @@
 											<legend>
 												Select Playlists:
 											</legend>
-											<form  role="form" method="post">
-												{{add_form.hidden_tag()}}
+											<form id="addVideo">
+												
 												<div class="input-group form-group">
 													<div class="input-group-btn">
 														<button type="button" class="btn btn-default dropdown-toggle" id="playlistDropDown" data-toggle="dropdown">
 															Current Playlists:
 															<span class="caret"></span>
 														</button>
-
 														<ul class="dropdown-menu" id="playlist-add" aria-labelledby="playlistDropDown">
 															{% for key2, value2 in pintube_object.youtube_data.iteritems() %}
 															{% set temp = value2 %}
@@ -101,26 +111,49 @@
 															</li>
 															<li class="divider"></li>
 															{% endfor %}
-
 														</ul>
-
-														
-
 													</div>
 												</div>
 												<input type="text" class="form-control" id="playlist_option", name="playlist_option">
-
+												{% set add_video_url = value["url"] %}
+												
+												<input type="submit" value="Add Video" class="btn btn-primary btn-lg">
+												
+										
+												<!--
 												<div class="btn-group">
 													<span onclick=set_values();></span>
-													{% set n = add_form.video_url.process_data(value["url"]) %}
-													{% set m = add_form.playlist_names.process_data(pnames) %}
-													<input class="btn btn-lg btn-primary btn-block" type="submit" value="Add Video">
 													
-													{# <!--<a href="javascript:copy_playlist('{{value["url"]}}');" class="btn btn-primary"></a>-->
+													
+													<input class="btn btn-lg btn-primary" type="submit" value="Add Video" onclick="add_video();">
+													
+													{# 
 													#}
 												</div>
+												-->
 
+	<!--<a href="javascript:copy_playlist('{{value["url"]}}');" class="btn btn-primary"></a>-->
 											</form>
+											<script type="text/javascript">
+											$(function() {
+												$('#addVideo').bind('submit', function(){
+													var playlist_names = $("#playlist_option").tagit("assignedTags");
+													
+													for (var i = 0; i < playlist_names.length; i++){
+														var pname = playlist_names[i].toString()
+														console.log("Entry "+ i + " => [" + pname + "]");
+														Sijax.request('add_video', ['{{add_video_url}}', '{{pname}}']);
+													}
+													
+													
+													
+													//Sijax.request('add_video', ['{{add_video_url}}', 'playlist_names']);
+													
+													//Prevent the form from being submitted
+													return false;
+												});
+											});
+											</script>
 										</fieldset></td>
 										<!-- Video -->
 										<td>
@@ -182,15 +215,23 @@
 												Title of New Playlist:
 											</legend>
 											<form role="form" method="post">
-												{{cp_form.hidden_tag()}}
-												{% set f = cp_form.new_playlist_name.process_data(key) %}
-												{# {{cp_form.new_playlist_name.data = {{key}}}} #}
-												{{cp_form.new_playlist_name(size=90)}}
-												{% set h = cp_form.original_playlist_url.process_data(value["url"]) %}
-												{# {{cp_form.original_playlist_url.data = {{value["url"]}}}} #}
-												<input class="btn btn-lg btn-primary btn-block" type="submit" value="Copy Playlist">
+												<input type="text" class="form-control" id="playlist_name", name="playlist_name" value="{{key}}">
+													{% set playlist_url = value['url'] %}
+													{% set playlist_name = key %}
+													<a href="javascript://" onclick="Sijax.request('copy_playlist', ['{{playlist_url}}', '{{playlist_name}}']);">Copy Playlist</a>
+													<!--<a href="javascript://" onclick="Sijax.request('copy_playlist', [playlist_url, playlist_name]);">Copy Playlist</a>-->
+												
+												<!--class="btn btn-primary"-->
 												{#
-												<!--<input type="text" class="form-control" id="playlist_name", name="playlist_name" value="{{pname}}">
+												{ {cp_form.hidden_tag()} }
+												{ % set f = cp_form.new_playlist_name.process_data(key) % }
+												{ {{cp_form.new_playlist_name.data = {{key}}}} }
+												{{cp_form.new_playlist_name(size=40)}}
+												{% set h = cp_form.original_playlist_url.process_data(value["url"]) %}
+												{ {{cp_form.original_playlist_url.data = {{value["url"]}}}} }
+												<!--
+												<input class="btn btn-lg btn-primary btn-block" type="submit" value="Copy Playlist" onclick="Sijax.request('copy_playlist', [{{value['url']}}, {{key}}]);">	
+												<input type="text" class="form-control" id="playlist_name", name="playlist_name" value="{{pname}}">
 												<div class="btn-group">
 												<a href="javascript:copy_playlist('{{value["url"]}}');" class="btn btn-primary">
 												<a href="#">

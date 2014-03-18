@@ -36,7 +36,7 @@ $(document).ready(function() {
 		
 		//$("#playlist_option").hide()
 		//document.getElementById("playlist_option").style.visibility = "hidden";
-		//console.log(text);
+		console.log(text);
 		
 		playlist = text[0];
 		//num = text[1];
@@ -51,13 +51,13 @@ $(document).ready(function() {
 		}
 		
 		//num = num[1]
-		
+		*/
 		
 		console.log(playlist);
-		console.log(total);
-		console.log(num);
+		//console.log(total);
+		//console.log(num);
 		
-		*/
+		
 		$("#playlist_option").data('tagit').tagInput.val(playlist);
 		
 		//var playlists = $("#playlist_option").val()
@@ -71,6 +71,16 @@ $(document).ready(function() {
 	$("#playlist_option").tagit({
 		allowSpaces: true
 	});
+	
+	/*
+	
+	var app = angular.module("app", []);
+	app.controller("AppCtrl", function(){
+		var app = this;
+		
+		app.message = "Testing One Two One Two"
+	});
+	*/
 	
 	//$("#playlist_option").hide()
 	//document.getElementById("playlist_option").style.visibility = "hidden";

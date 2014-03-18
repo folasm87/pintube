@@ -16,8 +16,11 @@
 	<script src="https://apis.google.com/js/platform.js"></script>
 	
 	
-	<script type=text/javascript src="{{url_for('static', filename='main.js') }}"></script>
 	<script type=text/javascript src="{{url_for('static', filename='jquery-ui.min.js') }}"></script>
+	<script type="text/javascript" src="/static/js/sijax/sijax.js"></script>
+	<script type="text/javascript"> {{ g.sijax.get_js()|safe }} </script>
+	<!--<script src="//ajax.googleapis.com/ajax/libs/angularjs/1.2.12/angular.min.js"></script>-->
+	<script type=text/javascript src="{{url_for('static', filename='main.js') }}"></script>
 	<script type=text/javascript src="{{url_for('static', filename='tag-it.min.js') }}"></script>
 	
 	

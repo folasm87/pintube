@@ -1,9 +1,11 @@
 import os
+import psycopg2
 
 basedir = os.path.abspath(os.path.dirname(__file__))
 
-SQLALCHEMY_DATABASE_URI = 'sqlite:///' + os.path.join(basedir, 'app.db')
-# SQLALCHEMY_DATABASE_URI = "postgresql://folasm87:GoatKiller87@localhost/pintube"
+# SQLALCHEMY_DATABASE_URI = 'sqlite:///' + os.path.join(basedir, 'app.db')
+# SQLALCHEMY_DATABASE_URI = "postgresql+psycopg2://folasm87:GoatKiller87@localhost/pintube"
+SQLALCHEMY_DATABASE_URI = "postgresql://folasm87:GoatKiller87@localhost/pintube_app"
 SQLALCHEMY_MIGRATE_REPO = os.path.join(basedir, 'db_repository')
 SQLALCHEMY_ECHO = True
 
