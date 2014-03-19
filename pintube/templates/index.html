@@ -43,7 +43,9 @@
 <script type="text/javascript">
     {{ g.sijax.get_js()|safe }}
 </script>
-
+{% macro input(name, value='', type='text') -%}
+    <input type="{{ type }}" value="{{ value|e }}" name="{{ name }}">
+{%- endmacro %}
 <h2>PinTube</h2>
 <div class="row">
 	<a href="javascript://" onclick="Sijax.request('say_hi');">Click here</a>
@@ -142,7 +144,8 @@
 													for (var i = 0; i < playlist_names.length; i++){
 														var pname = playlist_names[i].toString()
 														console.log("Entry "+ i + " => [" + pname + "]");
-														Sijax.request('add_video', ['{{add_video_url}}', '{{pname}}']);
+														//debugger;
+														Sijax.request('add_video', ['{{add_video_url}}', pname]);
 													}
 													
 													
@@ -215,11 +218,12 @@
 												Title of New Playlist:
 											</legend>
 											<form role="form" method="post">
+												{#{ input('playlist_name', value="{{key}}") }#}
 												<input type="text" class="form-control" id="playlist_name", name="playlist_name" value="{{key}}">
 													{% set playlist_url = value['url'] %}
 													{% set playlist_name = key %}
+													<!--<a href="javascript://" onclick="Sijax.request('copy_playlist', ['{{playlist_url}}', '{{input(playlist_name).value}}']);">Copy Playlist</a>-->
 													<a href="javascript://" onclick="Sijax.request('copy_playlist', ['{{playlist_url}}', '{{playlist_name}}']);">Copy Playlist</a>
-													<!--<a href="javascript://" onclick="Sijax.request('copy_playlist', [playlist_url, playlist_name]);">Copy Playlist</a>-->
 												
 												<!--class="btn btn-primary"-->
 												{#

@@ -111,11 +111,11 @@ class Info(db.Model):
     __tablename__ = 'info'
 
     id = db.Column(db.Integer, primary_key=True)
-    pinboard_videos = db.Column(MutableDict.as_mutable(JSONEncodedDict), index=True)
-    pinboard_playlists = db.Column(MutableDict.as_mutable(JSONEncodedDict), index=True)
-    pinboard_subscriptions = db.Column(MutableDict.as_mutable(JSONEncodedDict), index=True)
+    pinboard_videos = db.Column(MutableDict.as_mutable(JSONEncodedDict))
+    pinboard_playlists = db.Column(MutableDict.as_mutable(JSONEncodedDict))
+    pinboard_subscriptions = db.Column(MutableDict.as_mutable(JSONEncodedDict))
     # youtube_videos = db.Column(MutableDict.as_mutable(JSONEncodedDict), index=True)
-    youtube_playlists = db.Column(MutableDict.as_mutable(JSONEncodedDict), index=True)
+    youtube_playlists = db.Column(MutableDict.as_mutable(JSONEncodedDict))
     user_id = db.Column(db.Integer, ForeignKey('user.id'))
 
 
