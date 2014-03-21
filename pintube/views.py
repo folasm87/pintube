@@ -1,25 +1,3 @@
-"""
-import pinboard
-import urllib
-import urllib2
-import httplib2
-import StringIO
-import gzip
-from xml.dom import minidom
-
-
-import re
-
-
-import gdata
-import gdata.youtube.service
-from gdata.service import RequestError
-from gdata import youtube
-from gdata import apps
-from gdata import client
-from gdata import gauth
-
-"""
 import os
 import sys
 import json
@@ -52,8 +30,6 @@ from __init__ import login_manager
 import models
 """
 from forms import Pinboard_Login_Form
-from forms import Copy_Playlist
-from forms import Add_Video
 from models import User
 from models import Info
 from sqlalchemy.exc import IntegrityError
@@ -61,15 +37,6 @@ from sqlalchemy.exc import IntegrityError
 from jinja2 import Environment, FileSystemLoader
 import flask_sijax
 import sijax
-
-
-"""
-# Initializing GData, YouTubeService() used to generate the object so that we can communicate with the YouTube API
-youtube_service = gdata.youtube.service.YouTubeService()
-youtube_service.ssl = True
-youtube_service.developer_key = 'AI39si5JGdicli8WGHhzGfW07rvFHMmlLJMtpB1zx3rpBhaBruxL4wkqGFPkQ0Dj2MDFObGCsR_wphhr3N9QpyTUOH9y_aeWsQ'
-youtube_service.source = 'PinTube'
-"""
 
 sys.path.append(os.path.join('.', os.path.dirname(__file__), '../'))
 app.config['SIJAX_STATIC_PATH'] = os.path.join('.', os.path.dirname(__file__), 'static/js/sijax/')
@@ -83,10 +50,6 @@ has_pinboard = False
 authsub_token = ''
 pintube_object = Pintube()
 
-
-
-
-
 @login_manager.user_loader
 def load_user(id):
     return User.query.get(int(id))
@@ -96,19 +59,12 @@ def pinboard_login():
     form = Pinboard_Login_Form()
     global has_pinboard
     global pintube_object
-    # global pinboard_data
     global pinboard_object_data
 
     if form.validate_on_submit():
         session['pin_remember_me'] = form.pin_remember_me.data
-        # pinboard_object_data = get_pinboard(form.pin_user_id.data, form.pin_password.data)
-        # usern = form.pin_user_id.data
-        # passw = form.pin_password.data
-        # pintube_object = Pintube(usern)
         p = pintube_object.get_pinboard(form.pin_user_id.data, form.pin_password.data)
-        # pintube_object.pinboard_object_data = p
         if p["Pass"]:
-            # pinboard_data = get_pintubes(p)
             pintube_object.get_pintubes()
             has_pinboard = True
             return redirect(url_for('index'))
@@ -123,20 +79,11 @@ def youtube_login():
     authSubUrl = pintube_object.GetAuthSubUrl()
     return redirect(authSubUrl)
 
-# @app.route('/', methods=['GET', 'POST'])
-# @app.route('/index', methods=['GET', 'POST'])
 @flask_sijax.route(app, "/")
 @flask_sijax.route(app, "/index")
 def index():
-    cp_form = Copy_Playlist()
-    add_form = Add_Video()
     global has_youtube
     global authsub_token
-
-    def say_hi(obj_response):
-        print "Hi there partner!"
-        obj_response.alert('Hi there!')
-
 
     def copy_playlist(obj_response, original_playlist_url, new_playlist_name):
         print "Playlist URL is %s" % original_playlist_url
@@ -145,17 +92,15 @@ def index():
         print "Copied Playlist"
         obj_response.alert('Copied Playlist')
 
-    def add_video_to_playlists(obj_response, video_url, p_name):
+    def add_video_to_playlists(obj_response, video_url, p_name, last_one):
         print "Video URL is %s" % video_url
-        # print "Playlist Names are: "
-        # for p_name in playlist_names:
         print "Playlist Name is %s" % p_name
         pintube_object.add_video_to_possible_playlists(video_url, playlist_name=p_name)
         print "Added Video to Playlist {0}".format(p_name)
-        obj_response.alert('Added Video to Playlist(s)')
+        if last_one == "True":
+            obj_response.alert('Added Video to Playlist(s)')
 
     if g.sijax.is_sijax_request:
-        # Sijax request detected - let Sijax handle it
         g.sijax.register_callback('say_hi', say_hi)
         g.sijax.register_callback('copy_playlist', copy_playlist)
         g.sijax.register_callback('add_video', add_video_to_playlists)
@@ -164,100 +109,20 @@ def index():
     if ("token" in request.args) and (not has_youtube):
         print "Got Back Token!"
         authsub_token = request.args.get("token")
-        # authsub_token = str(authsub_token)
-        # print "Current Page is %s" % request.url
-        # temp_token = gdata.service.ExtractToken(request.url)
-        # temp_token = temp_token[0]
-        # temp_token = str(temp_token)
-        # print "Extract Token returns %s" % temp_token
         print "Token is %s" % authsub_token
         pintube_object.authsub_token = authsub_token
         pintube_object.SetAuthSubToken(authsub_token)
         pintube_object.UpgradeToSessionToken()
-        # pintube_object.youtube_service.SetAuthSubToken(authsub_token)
-        # pintube_object.youtube_service.UpgradeToSessionToken()
-        # pintube_object.youtube_service.upgrade_to_session_token(authsub_token)
         has_youtube = True
-
-        # pintube_object.get_youtube_data()
         print "Successfully upgraded token!"
         if has_pinboard:
             pintube_object.get_pintubes()
 
-    """
-    if (has_youtube and has_pinboard) and cp_form.validate_on_submit():
-        print "Copying Playlists"
-        pintube_object.authsub_token = authsub_token
-
-        # copy_playlist(cp_form.original_playlist_url.data, cp_form.new_playlist_name.data)
-
-
-    if (has_youtube and has_pinboard) and ("pnames" in request.args) and add_form.validate_on_submit():
-        print "Adding Video to Playlist(s)"
-        value = request.args.get('pnames')
-        # playlists = json.loads(add_form.playlist_names.data)
-        playlists = json.loads(value)
-        video_url = add_form.video_url.data
-        print "Add Video URL is %s" % video_url
-        add_video_to_playlists(video_url, playlist_names=playlists)
-    """
     if has_youtube and has_pinboard:
         providers = micawber.bootstrap_basic()
-        # pintube_object.get_youtube_data()
-
-        """
-        your_playlists = {}
-        playlist_feed = get_user_playlist_feed()
-        # url_pattern = r(http(s?)://www.youtube.com/watch+\Wv\W[a-zA-Z0-9-_]+)
-
-
-        # Copies the playlist Names, URIs and Videos to a dictionary
-        for playlist_entry in playlist_feed.entry:
-            playlist_entry_title = playlist_entry.title.text
-            playlist_entry_id = playlist_entry.id.text.split('/')[-1]
-            playlist_entry_video_feed = get_playlist_video_feed(playlist_entry_id)  # youtube_service.GetYouTubePlaylistVideoFeed(playlist_id=playlist_entry_id)
-            your_playlists.setdefault(playlist_entry_title, [playlist_entry_id, {}])
-
-            for playlist_video_entry in playlist_entry_video_feed.entry:
-                video_title = playlist_video_entry.title.text
-                video_id = playlist_video_entry.id.text
-                video_entry = youtube_service.GetYouTubeVideoEntry(video_id)
-
-                if video_entry.media.player is not None:
-                    media_url = video_entry.media.player.url
-                    media_url = re.search(url_pattern, media_url).group(0)
-                    your_playlists[playlist_entry_title][1].setdefault(video_title, media_url)
-                else:
-                    your_playlists[playlist_entry_title][1].setdefault(video_title, video_id)
-
-       
-        for tag in pinboard_data["vid_tags"].keys():
-            if tag not in your_playlists.keys():
-                new_public_playlistentry = youtube_service.AddPlaylist(tag, 'A Pintube Playlist')
-
-            else:
-                for vid in pinboard_data["vid_tags"][tag]:
-                    vid = str(vid)
-                    vid = re.search(url_pattern, vid).group(0)
-                    vids = your_playlists[tag][1] #=> playlist_entry_id
-
-                    if vid not in vids.values():  # Insufficient to check for already present video
-                        vid_id = get_video_id(vid)
-                        playlist_id = your_playlists[tag][0].replace('PL', '')
-                        post = add_video_to_playlist(vid_id, playlist_id, 1)
-        """
-
-        user = pintube_object.user  # User.query.filter_by(username=pinboard_object_data["username"]).first_or_404()
-        videos = user.info.pinboard_videos
-        playlists = user.info.pinboard_playlists
-        subscriptions = user.info.pinboard_subscriptions
-
-
-        env = Environment(loader=FileSystemLoader('/templates'))
-        env.globals['pintube_object'] = pintube_object
-        env.globals['copy_playlist'] = copy_playlist
-        env.globals['add_form'] = add_form
-
-        # print "Testing User Here: %s" % user
-        return render_template('index.html', has_youtube=has_youtube, has_pinboard=has_pinboard, videos=videos, playlists=playlists, subscriptions=subscriptions, pintube_object=pintube_object, cp_form=cp_form, add_form=add_form)
+        videos = pintube_object.db_videos
+        playlists = pintube_object.db_playlists
+        subscriptions = pintube_object.db_subscriptions
+        youtube_data = pintube_object.youtube_data
+        return render_template('index.html', has_youtube=has_youtube, has_pinboard=has_pinboard, videos=videos, playlists=playlists, subscriptions=subscriptions, youtube_data=youtube_data)  # pintube_object=pintube_object, cp_form=cp_form, add_form=add_form)
     return render_template('index.html', has_youtube=has_youtube, has_pinboard=has_pinboard)

@@ -7,12 +7,9 @@ from sqlalchemy.types import TypeDecorator, VARCHAR
 from sqlalchemy.ext.mutable import Mutable
 from flask.ext.restless import APIManager
 import json
-# from sqlalchemy import relationship, backref
 
 from flask.ext.admin import Admin, BaseView, expose
 from flask.ext.admin.contrib.sqla import ModelView
-
-
 
 class MyView(BaseView):
     @expose('/')
@@ -68,9 +65,6 @@ class MutableDict(Mutable, dict):
     def __setstate__(self, state):
         self.update(state)
 
-
-# MutableDict.associate_with(JSONEncodedDict)
-
 class User(db.Model):
 
     __tablename__ = 'user'
@@ -79,10 +73,7 @@ class User(db.Model):
     sqlite_autoincrement = True
     username = db.Column(db.String(80), index=True, unique=True)
     last_updated = db.Column(db.String(120), index=True, unique=True)
-    # token = db.Column(db.String(360), index=True, unique=True)
-
-    # info_id = db.Column(db.Integer, db.ForeignKey('info.id'))
-    info = db.relationship('Info', backref=db.backref('user'), uselist=False)  # , uselist=False) lazy='dynamic'
+    info = db.relationship('Info', backref=db.backref('user'), uselist=False)
 
 
     def __init__(self, username, last_updated, info):
@@ -114,7 +105,6 @@ class Info(db.Model):
     pinboard_videos = db.Column(MutableDict.as_mutable(JSONEncodedDict))
     pinboard_playlists = db.Column(MutableDict.as_mutable(JSONEncodedDict))
     pinboard_subscriptions = db.Column(MutableDict.as_mutable(JSONEncodedDict))
-    # youtube_videos = db.Column(MutableDict.as_mutable(JSONEncodedDict), index=True)
     youtube_playlists = db.Column(MutableDict.as_mutable(JSONEncodedDict))
     user_id = db.Column(db.Integer, ForeignKey('user.id'))
 
@@ -134,10 +124,3 @@ class Info(db.Model):
 admin = Admin(app)
 admin.add_view(MyView(name='Hello'))
 admin.add_view(ModelView(User, db.session))
-"""
-db.create_all()
-
-api_manager = APIManager(app, flask_sqlalchemy_db=db)
-api_manager.create_api(User, methods=['GET', 'POST', 'DELETE', 'PUT'])
-api_manager.create_api(Info, methods=['GET', 'POST', 'DELETE', 'PUT'])
-"""
