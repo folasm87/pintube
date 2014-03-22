@@ -53,7 +53,7 @@
 					</ul>
 
 					<!-- Tab panes -->
-					{% if has_youtube and has_pinboard %}
+					{% if HAS_YOUTUBE and has_pinboard %}
 					{#% set youtube_data = pintube_object.youtube_data %#}
 					<div class="tab-content faq-cat-content">
 						<div class="tab-pane active in fade" id="faq-cat-1">
@@ -169,14 +169,41 @@
 											<legend>
 												Title of New Playlist:
 											</legend>
-											<form role="form" method="post">
-												{#{ input('playlist_name', value="{{key}}") }#}
-												<input type="text" class="form-control" id="playlist_name", name="playlist_name" value="{{key}}">
-													{% set playlist_url = value['url'] %}
-													{% set playlist_name = key %}
+											<form id="copyPlaylist">
+												
+												<input type="text" class="form-control" id="playlist_name" name="playlist_name" value="{{key}}">
+												{% set playlist_url = value['url'] %}
+												{% set playlist_name = key %}
 													<!--<a href="javascript://" onclick="Sijax.request('copy_playlist', ['{{playlist_url}}', '{{input(playlist_name).value}}']);">Copy Playlist</a>-->
-													<a href="javascript://" onclick="Sijax.request('copy_playlist', ['{{playlist_url}}', '{{playlist_name}}']);" class="btn btn-primary btn-lg">Copy Playlist</a>
+													<!--<a href="javascript://" onclick="Sijax.request('copy_playlist', ['{{playlist_url}}', '{{playlist_name}}']);" class="btn btn-primary btn-lg">Copy Playlist</a>-->
+												<input type="submit" value="Copy Playlist" class="btn btn-primary btn-lg">
 											</form>
+											<script type="text/javascript">
+											$(function() {
+												$('#copyPlaylist').bind('submit', function(){
+													
+													var pname1 = $('#playlist_name').text()
+													var pname2 = $('#playlist_name').value()
+													console.log("First:=> " + pname1 + ". And Second: => " + pname2)
+													Sijax.request('copy_playlist', ['{{playlist_url}}', pname1]);
+													/*
+													var playlist_names = $("#playlist_option").tagit("assignedTags");
+													p_length = playlist_names.length;
+													for (var i = 0; i < p_length; i++){
+														var pname = playlist_names[i].toString()
+														if (i == (p_length - 1)) {
+															Sijax.request('add_video', ['{{add_video_url}}', pname, "True"]);
+														} else {
+															Sijax.request('add_video', ['{{add_video_url}}', pname, "False"]);
+														}
+														
+													}
+													*/
+
+													return false;
+												});
+											});
+											</script>
 										</fieldset></td>
 										<!-- Playlist -->
 										<td>

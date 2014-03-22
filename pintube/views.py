@@ -45,8 +45,8 @@ app.config['SIJAX_JSON_URI'] = '/static/js/sijax/json2.js'
 flask_sijax.Sijax(app)
 
 
-has_youtube = False
-has_pinboard = False
+HAS_YOUTUBE = False
+HAS_PINBOARD = False
 authsub_token = ''
 pintube_object = Pintube()
 
@@ -57,7 +57,7 @@ def load_user(id):
 @app.route('/pinboard', methods=['GET', 'POST'])
 def pinboard_login():
     form = Pinboard_Login_Form()
-    global has_pinboard
+    global HAS_PINBOARD
     global pintube_object
     global pinboard_object_data
 
@@ -66,7 +66,7 @@ def pinboard_login():
         p = pintube_object.get_pinboard(form.pin_user_id.data, form.pin_password.data)
         if p["Pass"]:
             pintube_object.get_pintubes()
-            has_pinboard = True
+            HAS_PINBOARD = True
             return redirect(url_for('index'))
         else:
             return redirect(url_for('pinboard_login'))
@@ -82,7 +82,7 @@ def youtube_login():
 @flask_sijax.route(app, "/")
 @flask_sijax.route(app, "/index")
 def index():
-    global has_youtube
+    global HAS_YOUTUBE
     global authsub_token
 
     def copy_playlist(obj_response, original_playlist_url, new_playlist_name):
@@ -106,23 +106,23 @@ def index():
         g.sijax.register_callback('add_video', add_video_to_playlists)
         return g.sijax.process_request()
 
-    if ("token" in request.args) and (not has_youtube):
+    if ("token" in request.args) and (not HAS_YOUTUBE):
         print "Got Back Token!"
         authsub_token = request.args.get("token")
         print "Token is %s" % authsub_token
         pintube_object.authsub_token = authsub_token
         pintube_object.SetAuthSubToken(authsub_token)
         pintube_object.UpgradeToSessionToken()
-        has_youtube = True
+        HAS_YOUTUBE = True
         print "Successfully upgraded token!"
-        if has_pinboard:
+        if HAS_PINBOARD:
             pintube_object.get_pintubes()
 
-    if has_youtube and has_pinboard:
+    if HAS_YOUTUBE and HAS_PINBOARD:
         providers = micawber.bootstrap_basic()
         videos = pintube_object.db_videos
         playlists = pintube_object.db_playlists
         subscriptions = pintube_object.db_subscriptions
         youtube_data = pintube_object.youtube_data
-        return render_template('index.html', has_youtube=has_youtube, has_pinboard=has_pinboard, videos=videos, playlists=playlists, subscriptions=subscriptions, youtube_data=youtube_data)  # pintube_object=pintube_object, cp_form=cp_form, add_form=add_form)
-    return render_template('index.html', has_youtube=has_youtube, has_pinboard=has_pinboard)
+        return render_template('index.html', HAS_YOUTUBE=HAS_YOUTUBE, HAS_PINBOARD=HAS_PINBOARD, videos=videos, playlists=playlists, subscriptions=subscriptions, youtube_data=youtube_data)  # pintube_object=pintube_object, cp_form=cp_form, add_form=add_form)
+    return render_template('index.html', HAS_YOUTUBE=HAS_YOUTUBE, HAS_PINBOARD=HAS_PINBOARD)
