@@ -1,7 +1,6 @@
 {% extends "base.html" %}
-
 {% block content %}
-
+<!--About Page -->
 <div class="navbar navbar-inverse navbar-fixed-top">
 	<div class="container">
 		<div class="navbar-header">
@@ -60,50 +59,16 @@
 </div>
 
 <div class="jumbotron">
-	<div class="row">
-		<div>
-			<form class="form-signin" action="" method="post" name="login">
-				{{form.hidden_tag()}}
-				<h2 class="form-signin-heading">Pinboard sign in</h2>
+	<p>
+		Hello!
+		<br />
+		My name is Mark Folashade and PinTube is my first web project.
+		<br />
+		I'm a beginning web developer based out of the Atlanta area. Always looking for opportunities to learn more about the industry and
+		available job prospects please feel free to get in touch if you're interested at
+		<a href="mailto:ayodeji.folashade@gmail.com?subject=Hello!" target="_blank">ayodeji _dot_ folashade @ gmail _dot_ com</a>
 
-				<p>
-					Please enter your User ID:
-					<br>
-					{{form.pin_user_id(size=40, placeholder="User ID")}}
-					<br>
-					{% for error in form.errors.user_id %}
-					<span style="color: red;">[{{error}}]</span>
-					{% endfor %}
-					<br>
-				</p>
-				<p>
-					Please enter your Password:
-					<br>
-					{{form.pin_password(size=40, placeholder="Password")}}
-					<br>
-				</p>
-				<p>
-					{{form.pin_remember_me}} Remember Me
-				</p>
-				<p>
-					<input class="btn btn-lg btn-primary btn-block" type="submit" value="Sign In">
-				</p>
-
-				<!--
-
-				<input type="text" class="form-control" placeholder="Email address" required autofocus>
-				<input type="password" class="form-control" placeholder="Password" required>
-				<label class="checkbox">
-				<input type="checkbox" value="remember-me">
-				Remember me </label>
-				<button class="btn btn-lg btn-primary btn-block" type="submit">
-				Sign in
-				</button>
-				-->
-
-			</form>
-		</div>
-	</div>
+	</p>
 
 </div>
 

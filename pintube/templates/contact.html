@@ -1,7 +1,5 @@
 {% extends "base.html" %}
-
 {% block content %}
-
 <div class="navbar navbar-inverse navbar-fixed-top">
 	<div class="container">
 		<div class="navbar-header">
@@ -59,52 +57,6 @@
 	</div>
 </div>
 
-<div class="jumbotron">
-	<div class="row">
-		<div>
-			<form class="form-signin" action="" method="post" name="login">
-				{{form.hidden_tag()}}
-				<h2 class="form-signin-heading">Pinboard sign in</h2>
-
-				<p>
-					Please enter your User ID:
-					<br>
-					{{form.pin_user_id(size=40, placeholder="User ID")}}
-					<br>
-					{% for error in form.errors.user_id %}
-					<span style="color: red;">[{{error}}]</span>
-					{% endfor %}
-					<br>
-				</p>
-				<p>
-					Please enter your Password:
-					<br>
-					{{form.pin_password(size=40, placeholder="Password")}}
-					<br>
-				</p>
-				<p>
-					{{form.pin_remember_me}} Remember Me
-				</p>
-				<p>
-					<input class="btn btn-lg btn-primary btn-block" type="submit" value="Sign In">
-				</p>
-
-				<!--
-
-				<input type="text" class="form-control" placeholder="Email address" required autofocus>
-				<input type="password" class="form-control" placeholder="Password" required>
-				<label class="checkbox">
-				<input type="checkbox" value="remember-me">
-				Remember me </label>
-				<button class="btn btn-lg btn-primary btn-block" type="submit">
-				Sign in
-				</button>
-				-->
-
-			</form>
-		</div>
-	</div>
-
-</div>
-
+<div class="jumbotron"></div>
+<!--Contact Page -->
 {% endblock %}

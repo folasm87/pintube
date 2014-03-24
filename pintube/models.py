@@ -76,10 +76,12 @@ class User(db.Model):
     info = db.relationship('Info', backref=db.backref('user'), uselist=False)
 
 
-    def __init__(self, username, last_updated, info):
+    def __init__(self, username, last_updated=None, info=None):
         self.username = username
-        self.last_updated = last_updated
-        self.info = info
+        if last_updated:
+            self.last_updated = last_updated
+        if info:
+            self.info = info
 
 
     def is_authenticated(self):
@@ -120,7 +122,8 @@ class Info(db.Model):
     def __repr__(self):
         return '<Info(%s, %s, %s)>' % (self.pinboard_videos, self.pinboard_playlists, self.pinboard_subscriptions)
 
-
+"""
 admin = Admin(app)
 admin.add_view(MyView(name='Hello'))
 admin.add_view(ModelView(User, db.session))
+"""

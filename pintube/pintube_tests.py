@@ -1,7 +1,10 @@
 import os
 # import pintube
 import unittest
+from unittest.mock import MagicMock
 import tempfile
+
+from pinclass import Pintube
 
 from __init__ import app, db
 from models import User
@@ -54,25 +57,13 @@ class PintubeTest(unittest.TestCase):
 
     def test_user_saves_properly(self):
         """Save our model to a postgression database, then ensure things are OK."""
-        user = User()
+        user = User(username='john')
         db.session.add(user)
         db.session.commit()
         self.assertEqual(user.id, 1)
 
-    """
-    def test_make_unique_user(self):
-        user = User(username="david")
-        db.session.add(user)
-        db.session.commit()
-        nickname = User.make_unique_nickname('john')
-        assert nickname != 'john'
-        u = User(nickname = nickname, email = 'susan@example.com')
-        db.session.add(u)
-        db.session.commit()
-        nickname2 = User.make_unique_nickname('john')
-        assert nickname2 != 'john'
-        assert nickname2 != nickname
-    """
+
+
 
 
 if __name__ == '__main__':

@@ -1,3 +1,8 @@
+"""
+Gets the user data from pinboard and youtube.
+If pinboard has not been updated recently and data is already
+in the database then it will just call the user data from the database.
+"""
 import os
 import re
 import sys
@@ -49,59 +54,86 @@ api_manager.create_api(Info, methods=['GET', 'POST', 'DELETE', 'PUT'])
 
 
 class Pintube(object):
+    """
+    Class that handles the retrieval of user data from pinboard and youtube.
+    """
 
     pinboard_data = {}
     pinboard_object_data = {}
     youtube_service = None
     user = None
     youtube_data = {}
-    authsub_token = ''
+    AUTHSUB_TOKEN = ''
     db_videos = {}
     db_playlists = {}
     db_subscriptions = {}
     user_playlist_feed = None
 
+    # my_pintube = Pintube()
+    # my_pintube.youtube_service.GenerateAuthSubURL
+    # = Mock(return_value='http://fffff')
+
 
     def __init__(self):
-        # Initializing GData YouTubeService object so that we can communicate with the YouTube API
+        """Initializing the Pintube object by initializing
+        the GData YouTubeService object
+        so that we can communicate with the YouTube API
+        """
         self.youtube_service = gdata.youtube.service.YouTubeService()
         self.youtube_service.ssl = True
         self.youtube_service.developer_key = 'AI39si5JGdicli8WGHhzGfW07rvFHMmlLJMtpB1zx3rpBhaBruxL4wkqGFPkQ0Dj2MDFObGCsR_wphhr3N9QpyTUOH9y_aeWsQ'
         self.youtube_service.source = 'PinTube'
 
     def GetAuthSubUrl(self):
+        """
+        Returns the AuthSub URL
+        """
         next = 'http://localhost:5000/'
         scope = 'http://gdata.youtube.com'
         secure = False
         session = True
-        return self.youtube_service.GenerateAuthSubURL(next, scope, secure, session)
+        return self.youtube_service.GenerateAuthSubURL(next, \
+                                                       scope, secure, session)
 
 
     def SetAuthSubToken(self, token):
+        """
+        Sets the authsub token
+        """
         return self.youtube_service.SetAuthSubToken(token=token)
 
-    def UpgradeToSessionToken(self, token=None):
+    def UpgradeToSessionToken(self):
+        """
+        Upgrades the session token
+        """
         print "Current token is %s" % self.youtube_service.current_token
         return self.youtube_service.UpgradeToSessionToken()
 
-    video_url_pattern = r"""(http(s?)://www.youtube.com/watch+\Wv\W[a-zA-Z0-9-_]+)"""
+    video_url_pattern = r"""(http(s?)://www.youtube.com
+                        /watch+\Wv\W[a-zA-Z0-9-_]+)"""
     def get_youtube_data(self):
+        """
+        Retrieve's the user's youtube data
+        """
         print "Starting GetYoutubeData Function"
 
         pinboard_object = self.pinboard_object_data
 
-        current_user = User.query.filter(User.username == pinboard_object["username"]).first()
+        current_user = User.query.filter \
+        (User.username == pinboard_object["username"]).first()
 
-        print "Current User's youtube data is %s" % current_user.info.youtube_playlists
 
 
-        if ((current_user is None) or (current_user.info is None) or (current_user.info.youtube_playlists is None)):
-            print "Youtube Playlists doesn't exist within the current user's info"
+
+        if ((current_user is None) or (current_user.info is None)
+            or (current_user.info.youtube_playlists is None)):
+            print "Youtube Playlists doesn't exist \
+             within the current user's info"
 
             playlists = {}
             p_feed = None
 
-            if (self.user_playlist_feed is not None):
+            if self.user_playlist_feed is not None:
                 p_feed = self.user_playlist_feed
             else:
                 self.user_playlist_feed = self.get_user_playlist_feed()
@@ -112,11 +144,12 @@ class Pintube(object):
                 p_title = p_entry.title.text
                 v_feed = self.get_playlist_video_feed(p_id)
                 videos = {}
-                number_of_vids = {}
+                # number_of_vids = {}
                 i = 0
                 print ""
                 print "_"*30
-                print "Your Youtube Account has a playlist [%s] with id [%s] ->" % (p_title, p_id)
+                print "Your Youtube Account has a playlist \
+                [%s] with id [%s] ->" % (p_title, p_id)
 
 
                 for v_entry in v_feed.entry:
@@ -126,15 +159,15 @@ class Pintube(object):
                     try:
                         video_entry = self.get_video_entry(video_uri=v_uri)
                     except RequestError, error:
-                            print error
-                            print "Video Entry Error!"
-                            continue
+                        print error
+                        print "Video Entry Error!"
+                        continue
 
 
                     i += 1
                     video_data = {}
 
-                    if (video_entry.media.player is not None):
+                    if video_entry.media.player is not None:
                         media_url = video_entry.media.player.url
                         media_url = re.search(self.video_url_pattern, media_url).group(0)
                         video_data = {"video_url": media_url, "video_uri": v_uri}
@@ -161,8 +194,11 @@ class Pintube(object):
 
 
     def add_video_to_possible_playlists(self, video_url, playlist_name):
+        """
+        Adds a video to a playlist. Checks to see if playlist already exists
+        """
         vid_id = self.get_video_id(video_url)
-        user_playlist_feed = None
+        # user_playlist_feed = None
         if (self.user_playlist_feed is None):
             self.user_playlist_feed = self.get_user_playlist_feed()
 
@@ -190,6 +226,10 @@ class Pintube(object):
 
 
     def copy_playlist_to(self, original_playlist_url, new_playlist_name):
+        """
+        Copies a playlist. Checks if the supplied name is already used by the user for a current playlist.
+        If it is then it will cycle through the videos in the original playlist and add missing videos.
+        """
         new_playlist = None
         new_playlist_id = ""
         new_playlist_user_uri = ""
@@ -230,26 +270,34 @@ class Pintube(object):
                     self.add_vid_to_playlist(video_id=id, playlist_uri=new_playlist_uri)
 
                 except RequestError, error:
-                        print error
-                        print "CP Adding Video To Playlist Error!"
-                        continue
+                    print error
+                    print "CP Adding Video To Playlist Error!"
+                    continue
 
 
 
     def get_list_of_feed_video_id(self, video_feed):
+        """
+        Returns a list of video id's from a video feed
+        """
         list_of_id = []
         for video_entry in video_feed.entry:
-            vid_entry = self.get_video_entry(video_uri=video_entry.id.text)
-            vid_id = vid_entry.id.text
+            print "This is the Entry ID Text => " + video_entry.id.text
+            try:
+                vid_entry = self.get_video_entry(video_uri=video_entry.id.text)
+                vid_id = vid_entry.id.text
 
-            video_entry = self.youtube_service.GetYouTubeVideoEntry(vid_id)
-            video_url = ""
-            if video_entry.media.player is not None:
-                video_url = video_entry.media.player.url
-                video_url = re.search(self.video_url_pattern, video_url).group(0)
+                video_entry = self.youtube_service.GetYouTubeVideoEntry(vid_id)
+                video_url = ""
+                if video_entry.media.player is not None:
+                    video_url = video_entry.media.player.url
+                    video_url = re.search(self.video_url_pattern, video_url).group(0)
 
-            video_id = self.get_video_id(video_url)
-            list_of_id.append(video_id)
+                video_id = self.get_video_id(video_url)
+                list_of_id.append(video_id)
+            except RequestError, error:
+                print error
+                print "Error for the Entry ID Text => " + video_entry.id.text
 
         return list_of_id
 
@@ -257,10 +305,16 @@ class Pintube(object):
 
     vid_id_pattern = r"""youtu(?:\.be|be\.com)/(?:.*v(?:/|=)|(?:.*/)?)([a-zA-Z0-9-_]+)"""
     def get_video_id(self, vid_url):
+        """
+        Returns a video ID
+        """
         return re.search(self.vid_id_pattern, vid_url).group(1)
 
     playlist_id_pattern = r"""([a-zA-Z0-9_\-]{11,100})"""
     def get_playlist_id(self, playlist_url=None, playlist_entry=None):
+        """
+        Returns a playlist ID
+        """
         id = ''
         if playlist_url:
             id = re.search(self.playlist_id_pattern, playlist_url).group(0)
@@ -274,6 +328,9 @@ class Pintube(object):
         return id
 
     def get_subscription_id(self, sub_url):
+        """
+        Returns a subscription ID
+        """
         prev = None
         for part in sub_url.split('/'):
             if prev == 'user':
@@ -284,30 +341,50 @@ class Pintube(object):
 
 
     def get_video_name(self, video_entry):
+        """
+        Returns a video name
+        """
         return video_entry.media.title.text
 
 
     def get_playlist_name(self, playlist_id=None, playlist_entry=None):
+        """
+        Returns a playlist name
+        """
         if (playlist_id):
             uri = 'https://gdata.youtube.com/feeds/api/playlists/' + playlist_id
-            return self.youtube_service.GetYouTubePlaylistFeed(uri).title.text
+            print "Playlist URI is " + uri
+            playlist_feed = self.youtube_service.GetYouTubePlaylistFeed(uri)  # .title.text
+            print "Playlist Name is " + playlist_feed.title.text
+            return playlist_feed.title.text  # name
         elif(playlist_entry):
-            return playlist_entry.title.text
+            name = playlist_entry.title.text
+            print "Playlist Name is " + name
+            return name
         return None
 
 
     def get_subscription_name(self, sub_id=None, sub_entry=None):
+        """
+        Returns a subscription name
+        """
         if (sub_id):
             uri = "https://gdata.youtube.com/feeds/api/users/" + sub_id
+            print "Subscription URI is " + uri
             title = self.youtube_service.GetYouTubeSubscriptionEntry(uri).title.text
+            print "Subscription Name is " + title
             return title
         elif(sub_entry):
             title = sub_entry.title.text
+            print "Subscription Name is " + title
             return title
         return None
 
 
     def get_video_entry(self, video_entry=None, video_id=None, video_uri=None):
+        """
+        Returns a video entry
+        """
         if video_id:
             return self.youtube_service.GetYouTubeVideoEntry(video_id=video_id)
         elif video_uri:
@@ -319,6 +396,9 @@ class Pintube(object):
 
 
     def get_playlist_entry(self, playlist_entry=None, playlist_id=None):
+        """
+        Returns a playlist entry
+        """
         if playlist_entry:
             plist_id = self.get_playlist_id(playlist_entry=playlist_entry)
             plist_uri = "https://gdata.youtube.com/feeds/api/playlists/" + plist_id
@@ -329,6 +409,9 @@ class Pintube(object):
 
 
     def get_subscription_entry(self, sub_entry=None, sub_id=None):
+        """
+        Returns a subscription entry
+        """
         if sub_id:
             return self.youtube_service.GetYouTubeSubscriptionEntry(sub_id)
         elif sub_entry:
@@ -339,21 +422,36 @@ class Pintube(object):
 
 
     def get_user_playlist_feed(self):
+        """
+        Returns a user's playlist feed
+        """
         return self.youtube_service.GetYouTubePlaylistFeed(username='default')
 
 
     def get_playlist_video_feed(self, playlist_id):
+        """
+        Returns a user's video feed
+        """
         return self.youtube_service.GetYouTubePlaylistVideoFeed(playlist_id=playlist_id)
 
 
     def get_subscription_feed(self):
+        """
+        Returns a user's subscription feed
+        """
         return self.youtube_service.GetYouTubeSubscriptionFeed(username='default')
 
     def get_video_pic(self, video_id):
+        """
+        Returns the picture of a video
+        """
         return """<img src="http://img.youtube.com/vi/{0}/hqdefault.jpg"></img>""".format(video_id)
 
 
     def add_vid_to_playlist(self, video_id, playlist_uri):
+        """
+        Adds a video to a playlist
+        """
         media = Media.Group()  # not added by default, but required to prevent 400
         print "The ID of the video to be added to the playlist => %s" % video_id
         print "The URI of the playlist => %s" % playlist_uri
@@ -363,13 +461,16 @@ class Pintube(object):
 
 
     def add_video_to_playlist(self, video_id, playlist_id, position):
+        """
+        Alternate way to add a video to playlist
+        """
         url = 'https://gdata.youtube.com/feeds/api/playlists/{0}?v=2'.format(playlist_id)
 
-        print "authsub_token for adding video is %s" % self.authsub_token
+        print "AUTHSUB_TOKEN for adding video is %s" % self.AUTHSUB_TOKEN
         print "X-GData-Key OR Youtube Developer key is => %s" % self.youtube_service.developer_key
 
         headers = {'Content-Type' : 'application/atom+xml',
-                   'Authorization' : 'Bearer %s' % self.authsub_token,
+                   'Authorization' : 'Bearer %s' % self.AUTHSUB_TOKEN,
                    'GData-Version' : '2',
                    'X-GData-Key' : 'key=%s' % self.youtube_service.developer_key}
 
@@ -386,12 +487,21 @@ class Pintube(object):
 
 
     def create_playlist(self, playlist_title, playlist_desc):
+        """
+        Create a playlist
+        """
         return self.youtube_service.AddPlaylist(playlist_title, playlist_desc)
 
-    def is_vid_in_playlist(video_id, playlist_id):
+    def is_vid_in_playlist(self, video_id, playlist_id):
+        """
+        Is video in the playlist
+        """
         pass
 
     def does_playlist_exist(self, user_playlist_feed, playlist_id=None, playlist_name=None):
+        """
+        Does the the playlist exist (Y/N)?
+        """
         for entry in user_playlist_feed.entry:
             id = entry.id.text.split('/')[-1]
             if playlist_name:
@@ -399,10 +509,13 @@ class Pintube(object):
                     return {"exist":True, "id":id }
             elif playlist_id:
                 if id == playlist_id:
-                    {"exist":True, "id":id }
+                    return {"exist":True, "id":id }
         return {"exist":False}
 
     def get_embed_playlist(self, playlist_id):
+        """
+        Returns playlist in embeddable code
+        """
         to_embed = Markup("""<iframe id="ytplayer" type="text/html" width="640" height="360"
                                 src="https://www.youtube.com/embed/?listType=playlist&list={0}&theme=light"
                                 frameborder="0" allowfullscreen></iframe>""".format(playlist_id))
@@ -410,6 +523,9 @@ class Pintube(object):
 
 
     def get_embed_subscription(self, sub_id):
+        """
+        Returns embeddable subscriptions
+        """
         to_embed = Markup("""<div class="g-ytsubscribe" data-channel="{0}" data-layout="full" data-count="default"></div>""".format(sub_id))
         return to_embed
 
@@ -417,6 +533,9 @@ class Pintube(object):
     # Code from Python-Pinboard. Used to directly get to last_updated information
     USER_AGENT = "Python-Pinboard/1.0 +http://morgancraft.com/service_layer/python-pinboard/"
     def get_last_update(self, username, password):
+        """
+        Return the time of last update for pinboard
+        """
         url = "https://api.pinboard.in/v1/posts/update"
         auth_handler = urllib2.HTTPBasicAuthHandler()
         auth_handler.add_password("API", "https://api.pinboard.in/", username, password)
@@ -440,6 +559,9 @@ class Pintube(object):
         return xml
 
     def get_pinboard(self, usern, passw):
+        """
+        Sign in to the pinboard service
+        """
         usern = '' + usern
         passw = '' + passw
 
@@ -452,11 +574,14 @@ class Pintube(object):
         self.pinboard_object_data = {"Pass": True, "pinboard_object": p, "username": usern, "password": passw}
         return self.pinboard_object_data
 
-    video_pattern = '(watch+\Wv\W)'
-    playlist_pattern = '(playlist+\Wlist=)'
-    channel_pattern = '(user/)'
+    video_pattern = r'(watch+\Wv\W)'
+    playlist_pattern = r'(playlist+\Wlist=)'
+    channel_pattern = r'(user/)'
 
     def get_pinboard_data(self):
+        """
+        Retrieves the pinboard data
+        """
         pinboard_object = self.pinboard_object_data
         posts = pinboard_object["pinboard_object"].posts(tag="youtube", count=1000)
 
@@ -512,6 +637,9 @@ class Pintube(object):
 
 
     def get_pintubes(self):
+        """
+        Retrieves the pinboard and youtube data
+        """
         if (self.pinboard_object_data is not None):
             if (self.pinboard_object_data["Pass"]):
                 print "starting Get_Pintubes()"
@@ -519,14 +647,11 @@ class Pintube(object):
                 user = User.query.filter(User.username == pinboard_object["username"]).first()
                 last_update = self.get_last_update(pinboard_object["username"], pinboard_object["password"])
 
-                if (self.authsub_token):
+                if (self.AUTHSUB_TOKEN):
                     yt_playlists = self.get_youtube_data()
 
-                    if ((user is None) or (user.info is None)):
-                        if (user is None):
-                            print "user is None"
-                        if (user.info is None):
-                            print "user.info is None"
+                    if (user is None):
+                        print "user is None"
 
                         self.get_pinboard_data()
 
@@ -549,17 +674,25 @@ class Pintube(object):
                     else:
                         print "user is present"
                         check_update = str(user.last_updated)
+                        if check_update != last_update:
+                            print "Time of last update has changed"
+                            self.get_pinboard_data()
+                            user.last_updated = last_update
+                        else:
+                            self.db_videos = user.info.pinboard_videos
+                            self.db_playlists = user.info.pinboard_playlists
+                            self.db_subscriptions = user.info.pinboard_subscriptions
+
                         print "Current User was lasted updated at %s while official time of last update is %s" % (str(check_update), last_update)
                         user.info.youtube_playlists = yt_playlists
-                        self.db_videos = user.info.pinboard_videos
-                        self.db_playlists = user.info.pinboard_playlists
-                        self.db_subscriptions = user.info.pinboard_subscriptions
+                        """
                         if ((check_update is None) or (check_update != last_update)):
                             if (check_update is None):
                                 print "user.last_updated is None"
                             else:
                                 print "user.last_updated doesn't match time of last update"
                             user.last_updated = last_update
+                        """
                         try:
                             db.session.commit()
                             print "Committed Session/User Present"
