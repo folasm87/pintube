@@ -7,273 +7,211 @@
 		}
 	}
 </script>
-<div class="navbar navbar-inverse navbar-fixed-top">
-	<div class="container">
-		<div class="navbar-header">
-			<button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
 
-				<!-- Home -->
-				<span class="icon-bar"></span>
+<h2>PinTube</h2>
+<div class="row">
+	<div class="col-md-4">
+		<div class="container">
+			<div class="row">
+				<div class="col-md-12 col-md-offset-0">
+					<!-- Nav tabs category -->
+					<ul class="nav nav-tabs faq-cat-tabs">
+						<li class="active">
+							<a href="#faq-cat-1" data-toggle="tab">Videos</a>
+						</li>
+						<li>
+							<a href="#faq-cat-2" data-toggle="tab">Playlists</a>
+						</li>
+						<li>
+							<a href="#faq-cat-3" data-toggle="tab">Subscriptions</a>
+						</li>
+					</ul>
 
-				<!-- Login to Youtube  OR Logout-->
-				<span class="icon-bar"></span>
+					<!-- Tab panes -->
+					{% if HAS_YOUTUBE and HAS_PINBOARD %}
+					{#% set youtube_data = pintube_object.youtube_data %#}
+					<div class="tab-content faq-cat-content">
+						<div class="tab-pane active in fade" id="faq-cat-1">
+							<!-- Video Table Information -->
+							<table class="table table-striped table-bordered">
+								<thead>
+									<tr>
+										<th class="td-actions"> Add Video? </th>
+										<th> Pinboard Youtube Videos </th>
+									</tr>
+								</thead>
+								<tbody>
+									{% for key, value in videos.iteritems() %}
+									<tr>
+										<!-- Add Video to Playlist(s) -->
+										<td>
+										<form id="addVideo">
+											<fieldset>
+												<legend>
+													Select Playlists:
+												</legend>
+											</fieldset>
 
-				<!-- Login to Pinboard -->
-				<span class="icon-bar"></span>
+											<div class="input-group form-group">
+												<div class="input-group-btn">
+													<button type="button" class="btn btn-default dropdown-toggle" id="playlistDropDown" data-toggle="dropdown">
+														Current Playlists:
+														<span class="caret"></span>
+													</button>
+													<ul class="dropdown-menu" id="playlist-add" aria-labelledby="playlistDropDown">
+														{% for key2, value2 in youtube_data.iteritems() %}
+														{% set temp = value2 %}
+														<li>
+															<a href="#">{{key2|e}} ({{value2["number_of_vids"]|e}})</a>
+														</li>
+														<li class="divider"></li>
+														{% endfor %}
+													</ul>
+												</div>
+											</div>
+											<input type="text" class="form-control" id="playlist_option", name="playlist_option">
+											{% set add_video_url = value["url"] %}
 
-				<!-- About -->
-				<span class="icon-bar"></span>
+											<input type="submit" value="Add Video" class="btn btn-primary btn-lg">
+										</form>
+										<script type="text/javascript">
+											$(function() {
+												$('#addVideo').bind('submit', function() {
+													var playlist_names = $("#playlist_option").tagit("assignedTags");
+													p_length = playlist_names.length;
+													for (var i = 0; i < p_length; i++) {
+														var pname = playlist_names[i].toString()
+														if (i == (p_length - 1)) {
+															Sijax.request('add_video', ['{{add_video_url}}', pname, "True"]);
+														} else {
+															Sijax.request('add_video', ['{{add_video_url}}', pname, "False"]);
+														}
 
-				<!-- Contact -->
-				<span class="icon-bar"></span>
+													}
 
-			</button>
-			<a class="navbar-brand" href="{{ url_for('index') }}">PinTube</a>
-		</div>
-		<div class="collapse navbar-collapse">
-			<ul class="nav navbar-nav navbar-right">
-				<li class="active">
-					<a href="{{ url_for('index') }}">Home</a>
-				</li>
-				{% if not HAS_YOUTUBE %}
-				<li>
-					<a href="{{ url_for('youtube_login') }}">Login to Youtube</a>
-				</li>
-				{% endif %}
-
-				{% if not HAS_PINBOARD %}
-				<li>
-					<a href="{{ url_for('pinboard_login') }}">Log in to Pinboard</a>
-				</li>
-				{% endif %}
-				{% if HAS_YOUTUBE and HAS_PINBOARD %}
-				<li>
-					<!-- Use Sijax -->
-					<a href="{{ url_for('logout') }}">Logout</a>
-				</li>
-				{% endif %}
-
-				<li>
-					<a href="{{ url_for('about') }}">About</a>
-				</li>
-				<li>
-					<a href="{{ url_for('contact') }}">Contact</a>
-				</li>
-			</ul>
-		</div><!--/.nav-collapse -->
-	</div>
-</div>
-
-<div class="jumbotron">
-	<div>
-		<!-- class="container" -->
-		<h2>PinTube</h2>
-		<div class="row">
-			<div class="col-md-4">
-				<div class="container">
-					<div class="row">
-						<div class="col-md-12 col-md-offset-0">
-							<!-- Nav tabs category -->
-							<ul class="nav nav-tabs faq-cat-tabs">
-								<li class="active">
-									<a href="#faq-cat-1" data-toggle="tab">Videos</a>
-								</li>
-								<li>
-									<a href="#faq-cat-2" data-toggle="tab">Playlists</a>
-								</li>
-								<li>
-									<a href="#faq-cat-3" data-toggle="tab">Subscriptions</a>
-								</li>
-							</ul>
-
-							<!-- Tab panes -->
-							{% if HAS_YOUTUBE and HAS_PINBOARD %}
-							{#% set youtube_data = pintube_object.youtube_data %#}
-							<div class="tab-content faq-cat-content">
-								<div class="tab-pane active in fade" id="faq-cat-1">
-									<!-- Video Table Information -->
-									<table class="table table-striped table-bordered">
-										<thead>
-											<tr>
-												<th class="td-actions"> Add Video? </th>
-												<th> Pinboard Youtube Videos </th>
-											</tr>
-										</thead>
-										<tbody>
-											{% for key, value in videos.iteritems() %}
-											<tr>
-												<!-- Add Video to Playlist(s) -->
-												<td>
-												<form id="addVideo">
-													<fieldset>
-														<legend>
-															Select Playlists:
-														</legend>
-													</fieldset>
-
-													<div class="input-group form-group">
-														<div class="input-group-btn">
-															<button type="button" class="btn btn-default dropdown-toggle" id="playlistDropDown" data-toggle="dropdown">
-																Current Playlists:
-																<span class="caret"></span>
-															</button>
-															<ul class="dropdown-menu" id="playlist-add" aria-labelledby="playlistDropDown">
-																{% for key2, value2 in youtube_data.iteritems() %}
-																{% set temp = value2 %}
-																<li>
-																	<a href="#">{{key2|e}} ({{value2["number_of_vids"]|e}})</a>
-																</li>
-																<li class="divider"></li>
-																{% endfor %}
-															</ul>
-														</div>
+													return false;
+												});
+											});
+										</script></td>
+										<!-- Video -->
+										<td>
+										<button class="btn btn-primary btn-lg" data-toggle="modal" data-target="#myVideoModal{{loop.index}}">
+											{{key}}
+										</button>
+										<div class="modal fade  modal-wide" id="myVideoModal{{loop.index}}" tabindex="-1" role="dialog" aria-labelledby="myVideoModalLabel{{loop.index}}" aria-hidden="true">
+											<div class="modal-dialog">
+												<div class="modal-content">
+													<div class="modal-header">
+														<button type="button" class="close" data-dismiss="modal" aria-hidden="true">
+															&times;
+														</button>
+														<h4 class="modal-title" id="myVideoModalLabel{{loop.index}}">{{key}}</h4>
 													</div>
-													<input type="text" class="form-control" id="playlist_option", name="playlist_option">
-													{% set add_video_url = value["url"] %}
-
-													<input type="submit" value="Add Video" class="btn btn-primary btn-lg">
-												</form>
-												<script type="text/javascript">
-													$(function() {
-														$('#addVideo').bind('submit', function() {
-															var playlist_names = $("#playlist_option").tagit("assignedTags");
-															p_length = playlist_names.length;
-															for (var i = 0; i < p_length; i++) {
-																var pname = playlist_names[i].toString()
-																if (i == (p_length - 1)) {
-																	Sijax.request('add_video', ['{{add_video_url}}', pname, "True"]);
-																} else {
-																	Sijax.request('add_video', ['{{add_video_url}}', pname, "False"]);
-																}
-
-															}
-
-															return false;
-														});
-													});
-												</script></td>
-												<!-- Video -->
-												<td>
-												<button class="btn btn-primary btn-lg" data-toggle="modal" data-target="#myVideoModal{{loop.index}}">
-													{{key}}
-												</button>
-												<div class="modal fade  modal-wide" id="myVideoModal{{loop.index}}" tabindex="-1" role="dialog" aria-labelledby="myVideoModalLabel{{loop.index}}" aria-hidden="true">
-													<div class="modal-dialog">
-														<div class="modal-content">
-															<div class="modal-header">
-																<button type="button" class="close" data-dismiss="modal" aria-hidden="true">
-																	&times;
-																</button>
-																<h4 class="modal-title" id="myVideoModalLabel{{loop.index}}">{{key}}</h4>
-															</div>
-															<div class="modal-body">
-																{{value["url"]|oembed()}}
-															</div>
-															<div class="modal-footer">
-																<button type="button" class="btn btn-default" data-dismiss="modal">
-																	Close
-																</button>
-															</div>
-														</div>
+													<div class="modal-body">
+														{{value["url"]|oembed()}}
 													</div>
-												</div></td>
-											</tr>
-											{% endfor %}
-										</tbody>
-									</table>
-								</div>
-
-								<div class="tab-pane fade" id="faq-cat-2">
-									<!-- Playlist Table Information -->
-									<table class="table table-striped table-bordered">
-										<thead>
-											<tr>
-												<th class="td-actions"> Copy Playlist? </th>
-												<th> Pinboard Youtube Playlists </th>
-
-											</tr>
-										</thead>
-										<tbody>
-
-											{% for key, value in playlists.iteritems()%}
-											<tr>
-												<!-- Copy Playlist? -->
-												<td>
-												<form id="copyPlaylist" method="post">
-													<fieldset>
-														<legend>
-															Title of New Playlist:
-														</legend>
-													</fieldset>
-													<input type="text" class="form-control" id="playlist_name{{loop.index}}" name="playlist_name{{loop.index}}" value="{{key}}">
-													{% set playlist_url = value['url'] %}
-													<a href="javascript://" onclick="Sijax.request('copy_playlist', ['{{playlist_url}}', $('#playlist_name{{loop.index}}').val()]);" class="btn btn-primary btn-lg">Copy Playlist</a>
-												</form></td>
-												<!-- Playlist -->
-												<td>
-												<button class="btn btn-primary btn-lg" data-toggle="modal" data-target="#myPlaylistModal{{loop.index}}">
-													{{key}}
-												</button>
-												<div class="modal fade modal-wide" id="myPlaylistModal{{loop.index}}" tabindex="-1" role="dialog" aria-labelledby="myPlaylistModalLabel{{loop.index}}" aria-hidden="true">
-													<div class="modal-dialog">
-														<div class="modal-content">
-															<div class="modal-header">
-																<button type="button" class="close" data-dismiss="modal" aria-hidden="true">
-																	&times;
-																</button>
-																<h4 class="modal-title" id="myPlaylistModalLabel{{loop.index}}">{{key}}</h4>
-															</div>
-															<div class="modal-body">
-																{% autoescape false %}
-																{{value["embed"]}}
-																{% endautoescape %}
-															</div>
-															<div class="modal-footer">
-																<button type="button" class="btn btn-default" data-dismiss="modal">
-																	Close
-																</button>
-															</div>
-														</div>
+													<div class="modal-footer">
+														<button type="button" class="btn btn-default" data-dismiss="modal">
+															Close
+														</button>
 													</div>
-												</div></td>
+												</div>
+											</div>
+										</div></td>
+									</tr>
+									{% endfor %}
+								</tbody>
+							</table>
+						</div>
 
-											</tr>
-											{% endfor %}
-										</tbody>
-									</table>
+						<div class="tab-pane fade" id="faq-cat-2">
+							<!-- Playlist Table Information -->
+							<table class="table table-striped table-bordered">
+								<thead>
+									<tr>
+										<th class="td-actions"> Copy Playlist? </th>
+										<th> Pinboard Youtube Playlists </th>
 
-								</div>
-								<div class="tab-pane fade" id="faq-cat-3">
-									<!-- Subscription Table Information -->
-									<table class="table table-striped table-bordered">
-										<thead>
-											<tr>
-												<th> Pinboard Youtube Subscriptions </th>
-											</tr>
-										</thead>
-										<tbody>
-											{% for key, value in subscriptions.iteritems()%}
-											<tr>
-												<!-- Subscription -->
-												<td> {% autoescape false %}
-												{{value["embed"]}}
-												{% endautoescape %} </td>
-											</tr>
-											{% endfor %}
-										</tbody>
-									</table>
-								</div>
-							</div>
-							{% endif %}
+									</tr>
+								</thead>
+								<tbody>
+
+									{% for key, value in playlists.iteritems()%}
+									<tr>
+										<!-- Copy Playlist? -->
+										<td>
+										<form id="copyPlaylist" method="post">
+											<fieldset>
+												<legend>
+													Title of New Playlist:
+												</legend>
+											</fieldset>
+											<input type="text" class="form-control" id="playlist_name{{loop.index}}" name="playlist_name{{loop.index}}" value="{{key}}">
+											{% set playlist_url = value['url'] %}
+											<a href="javascript://" onclick="Sijax.request('copy_playlist', ['{{playlist_url}}', $('#playlist_name{{loop.index}}').val()]);" class="btn btn-primary btn-lg">Copy Playlist</a>
+										</form></td>
+										<!-- Playlist -->
+										<td>
+										<button class="btn btn-primary btn-lg" data-toggle="modal" data-target="#myPlaylistModal{{loop.index}}">
+											{{key}}
+										</button>
+										<div class="modal fade modal-wide" id="myPlaylistModal{{loop.index}}" tabindex="-1" role="dialog" aria-labelledby="myPlaylistModalLabel{{loop.index}}" aria-hidden="true">
+											<div class="modal-dialog">
+												<div class="modal-content">
+													<div class="modal-header">
+														<button type="button" class="close" data-dismiss="modal" aria-hidden="true">
+															&times;
+														</button>
+														<h4 class="modal-title" id="myPlaylistModalLabel{{loop.index}}">{{key}}</h4>
+													</div>
+													<div class="modal-body">
+														{% autoescape false %}
+														{{value["embed"]}}
+														{% endautoescape %}
+													</div>
+													<div class="modal-footer">
+														<button type="button" class="btn btn-default" data-dismiss="modal">
+															Close
+														</button>
+													</div>
+												</div>
+											</div>
+										</div></td>
+
+									</tr>
+									{% endfor %}
+								</tbody>
+							</table>
+
+						</div>
+						<div class="tab-pane fade" id="faq-cat-3">
+							<!-- Subscription Table Information -->
+							<table class="table table-striped table-bordered">
+								<thead>
+									<tr>
+										<th> Pinboard Youtube Subscriptions </th>
+									</tr>
+								</thead>
+								<tbody>
+									{% for key, value in subscriptions.iteritems()%}
+									<tr>
+										<!-- Subscription -->
+										<td> {% autoescape false %}
+										{{value["embed"]}}
+										{% endautoescape %} </td>
+									</tr>
+									{% endfor %}
+								</tbody>
+							</table>
 						</div>
 					</div>
+					{% endif %}
 				</div>
 			</div>
-			<div class="col-md-4"></div>
-			<div class="col-md-4"></div>
-
 		</div>
 	</div>
-</div>
+	<div class="col-md-4"></div>
+	<div class="col-md-4"></div>
 
+</div>
 {% endblock %}

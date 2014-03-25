@@ -1,75 +1,13 @@
 {% extends "base.html" %}
 {% block content %}
 <!--About Page -->
-<div class="navbar navbar-inverse navbar-fixed-top">
-	<div class="container">
-		<div class="navbar-header">
-			<button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
 
-				<!-- Home -->
-				<span class="icon-bar"></span>
-
-				<!-- Login to Youtube  OR Logout-->
-				<span class="icon-bar"></span>
-
-				<!-- Login to Pinboard -->
-				<span class="icon-bar"></span>
-
-				<!-- About -->
-				<span class="icon-bar"></span>
-
-				<!-- Contact -->
-				<span class="icon-bar"></span>
-
-			</button>
-			<a class="navbar-brand" href="{{ url_for('index') }}">PinTube</a>
-		</div>
-		<div class="collapse navbar-collapse">
-			<ul class="nav navbar-nav navbar-right">
-				<li class="active">
-					<a href="{{ url_for('index') }}">Home</a>
-				</li>
-				{% if not HAS_YOUTUBE %}
-				<li>
-					<a href="{{ url_for('youtube_login') }}">Login to Youtube</a>
-				</li>
-				{% endif %}
-
-				{% if not HAS_PINBOARD %}
-				<li>
-					<a href="{{ url_for('pinboard_login') }}">Log in to Pinboard</a>
-				</li>
-				{% endif %}
-				{% if HAS_YOUTUBE and HAS_PINBOARD %}
-				<li>
-					<!-- Use Sijax -->
-					<a href="{{ url_for('logout') }}">Logout</a>
-				</li>
-				{% endif %}
-
-				<li>
-					<a href="{{ url_for('about') }}">About</a>
-				</li>
-				<li>
-					<a href="{{ url_for('contact') }}">Contact</a>
-				</li>
-			</ul>
-		</div><!--/.nav-collapse -->
-	</div>
-</div>
-
-<div class="jumbotron">
-	<p>
-		Hello!
-		<br />
-		My name is Mark Folashade and PinTube is my first web project.
-		<br />
-		I'm a beginning web developer based out of the Atlanta area. Always looking for opportunities to learn more about the industry and
-		available job prospects please feel free to get in touch if you're interested at
-		<a href="mailto:ayodeji.folashade@gmail.com?subject=Hello!" target="_blank">ayodeji _dot_ folashade @ gmail _dot_ com</a>
-
-	</p>
-
-</div>
-
+<p>
+	Hello! <br /> 
+	My name is Mark Folashade and PinTube is my first web project. <br />
+	I'm a beginning web developer based out of the Atlanta area. Always looking for opportunities to learn more about the industry and 
+	available job prospects please feel free to get in touch if you're interested at
+	<a href="mailto:ayodeji.folashade@gmail.com?subject=Hello!" target="_blank">ayodeji _dot_ folashade @ gmail _dot_ com</a>
+	
+</p>
 {% endblock %}
