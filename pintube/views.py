@@ -1,44 +1,19 @@
 """Handles the display of different views in the application"""
 import os
 import sys
-# import json
-# import gdata
 import micawber
-from pintube.pinclass import Pintube
-# from flask import Flask
-# from flask import Markup
 from flask import request
 from flask import session
 from flask import g
 from flask import redirect
 from flask import url_for
-# from flask import abort
 from flask import render_template
-# from flask import flash
-# from flask import session
-# from flask import Response
-# from flask import jsonify
-# from flask.ext.login import login_user,
-# logout_user, current_user, login_required
 
-from pintube import app
-# from pintube import db
-# from pintube import models
-# from pintube import login_manager
-"""
-from __init__ import app
-from __init__ import db
-from __init__ import login_manager
-import models
-"""
-from pintube.forms import Pinboard_Login_Form
-# from pintube.models import User
-# from pintube.models import Info
-# from sqlalchemy.exc import IntegrityError
-
-# from jinja2 import Environment, FileSystemLoader
 import flask_sijax
-# import sijax
+from pintube import app
+from pintube.pinclass import Pintube
+from pintube.forms import Pinboard_Login_Form
+
 
 SIJAX_PATH = os.path.join('.', os.path.dirname(__file__), 'static/js/sijax/')
 sys.path.append(os.path.join('.', os.path.dirname(__file__), '../'))
@@ -52,12 +27,6 @@ HAS_YOUTUBE = False
 HAS_PINBOARD = False
 AUTHSUB_TOKEN = ''
 PINTUBE_OBJECT = Pintube()
-
-"""
-@login_manager.user_loader
-def load_user(id):
-    return User.query.get(int(id))
-"""
 
 
 @app.route('/about')
@@ -100,8 +69,6 @@ def pinboard_login():
     global PINTUBE_OBJECT
     form = Pinboard_Login_Form()
 
-    # global pinboard_object_data
-
     if form.validate_on_submit():
         session['pin_remember_me'] = form.pin_remember_me.data
         user_id = form.pin_user_id.data
@@ -125,7 +92,7 @@ def youtube_login():
     View to Youtube Login
     """
     print "Beginning Youtube Login Process"
-    authsub_url = PINTUBE_OBJECT.GetAuthSubUrl()
+    authsub_url = PINTUBE_OBJECT.get_authsub_url()
     return redirect(authsub_url)
 
 @flask_sijax.route(app, "/")
@@ -171,9 +138,8 @@ def index():
         print "Got Back Token!"
         AUTHSUB_TOKEN = request.args.get("token")
         print "Token is %s" % AUTHSUB_TOKEN
-        PINTUBE_OBJECT.AUTHSUB_TOKEN = AUTHSUB_TOKEN
-        PINTUBE_OBJECT.SetAuthSubToken(AUTHSUB_TOKEN)
-        PINTUBE_OBJECT.UpgradeToSessionToken()
+        PINTUBE_OBJECT.set_authsub_token(AUTHSUB_TOKEN)
+        PINTUBE_OBJECT.upgrade_to_session_token()
         HAS_YOUTUBE = True
         print "Successfully upgraded token!"
         if HAS_PINBOARD:

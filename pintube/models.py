@@ -5,17 +5,18 @@ from __init__ import app
 from sqlalchemy import ForeignKey
 from sqlalchemy.types import TypeDecorator, VARCHAR
 from sqlalchemy.ext.mutable import Mutable
-from flask.ext.restless import APIManager
+# from flask.ext.restless import APIManager
 import json
 
-from flask.ext.admin import Admin, BaseView, expose
-from flask.ext.admin.contrib.sqla import ModelView
+# from flask.ext.admin import Admin, BaseView, expose
+# from flask.ext.admin.contrib.sqla import ModelView
 
+"""
 class MyView(BaseView):
     @expose('/')
     def index(self):
         return self.render('admin/index.html')
-
+"""
 
 class JSONEncodedDict(TypeDecorator):
     "Represents an immutable structure as a json-encoded string."
