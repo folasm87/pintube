@@ -78,7 +78,7 @@ class Pintube(object):
         """
         Returns the AuthSub URL
         """
-        next = 'http://0.0.0.0:5000'  #  'http://flask-pintube.herokuapp.com/'   'http://0.0.0.0:5000'  'http://localhost:5000/'
+        next = 'http://flask-pintube.herokuapp.com/'  #  'http://flask-pintube.herokuapp.com/'   'http://0.0.0.0:5000'  'http://localhost:5000/'
         scope = 'http://gdata.youtube.com'
         secure = False
         session = True
