@@ -15,6 +15,8 @@ from micawber.contrib.mcflask import add_oembed_filters
 app = Flask(__name__, static_folder='./static',
                 template_folder='./templates')
 
+
+app.debug = True
 app.config.from_object(config)
 
 db = SQLAlchemy(app)
