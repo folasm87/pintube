@@ -64,27 +64,34 @@ def pinboard_login():
     """
     View to Pinboard Login
     """
-    global HAS_PINBOARD
-    global HAS_YOUTUBE
-    global PINTUBE_OBJECT
-    form = Pinboard_Login_Form()
-
-    if form.validate_on_submit():
-        session['pin_remember_me'] = form.pin_remember_me.data
-        user_id = form.pin_user_id.data
-        password = form.pin_password.data
-        pinboard_pass = PINTUBE_OBJECT.get_pinboard(user_id, password)
-        if pinboard_pass["Pass"]:
-            PINTUBE_OBJECT.get_pintubes()
-            HAS_PINBOARD = True
-            return redirect(url_for('index'))
-        else:
-            return redirect(url_for('pinboard_login'))
-
-    return render_template('pinboard_login.html',
-                           title='Sign In to Pinboard', form=form,
-                           HAS_YOUTUBE=HAS_YOUTUBE,
-                           HAS_PINBOARD=HAS_PINBOARD)
+    
+    try:
+        global HAS_PINBOARD
+        global HAS_YOUTUBE
+        global PINTUBE_OBJECT
+        form = Pinboard_Login_Form()
+    
+    
+        if form.validate_on_submit():
+            session['pin_remember_me'] = form.pin_remember_me.data
+            user_id = form.pin_user_id.data
+            password = form.pin_password.data
+            pinboard_pass = PINTUBE_OBJECT.get_pinboard(user_id, password)
+            if pinboard_pass["Pass"]:
+                PINTUBE_OBJECT.get_pintubes()
+                HAS_PINBOARD = True
+                return redirect(url_for('index'))
+            else:
+                return redirect(url_for('pinboard_login'))
+    
+        return render_template('pinboard_login.html',
+                               title='Sign In to Pinboard', form=form,
+                               HAS_YOUTUBE=HAS_YOUTUBE,
+                               HAS_PINBOARD=HAS_PINBOARD)
+    except Exception as exec:
+        print exec
+        raise
+        
 
 @app.route('/youtube', methods=['GET', 'POST'])
 def youtube_login():
