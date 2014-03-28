@@ -1,1 +1,1 @@
-web: gunicorn --log-level=DEBUG --timeout=60*60 runp-heroku:app
+web: gunicorn --log-level=DEBUG --timeout 360 runp-heroku:app
