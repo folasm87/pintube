@@ -123,6 +123,8 @@ class Info(db.Model):
     def __repr__(self):
         return '<Info(%s, %s, %s)>' % (self.pinboard_videos, self.pinboard_playlists, self.pinboard_subscriptions)
 
+db.create_all()
+
 """
 admin = Admin(app)
 admin.add_view(MyView(name='Hello'))
