@@ -124,7 +124,7 @@ def index():
                            + new_playlist_name)
 
 
-    def add_video_to_playlists(obj_response, video_url, p_name, last_one):
+    def add_video_to_playlists(obj_response, video_url, video_name, p_name, last_one):
         """Sijax function used to expose the
         add_video functionality to the front end
         """
@@ -134,7 +134,8 @@ def index():
                                                         playlist_name=p_name)
         print "Added Video to Playlist {0}".format(p_name)
         if last_one == "True":
-            obj_response.alert('Added Video to Playlist(s)')
+            finished = "Added video [{0}] to playlist [{1}]".format(video_name, p_name)
+            obj_response.alert(finished)
 
     if g.sijax.is_sijax_request:
         g.sijax.register_callback('copy_playlist', copy_playlist)
