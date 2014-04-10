@@ -6,7 +6,7 @@ from rq import Worker, Queue, Connection, use_connection
 
 listen = ['high', 'default', 'low']
 
-redis_url = os.getenv('REDISTOGO_URL', 'localhost')  # 'redis://localhost:6379')
+redis_url = os.getenv('REDISTOGO_URL', 'redis://localhost:6379')  # 'localhost')
 
 """
 if not redis_url:
@@ -15,8 +15,8 @@ if not redis_url:
 urlparse.uses_netloc.append('redis')
 url = urlparse.urlparse(redis_url)
 conn = Redis(host=url.hostname, port=url.port, db=0, password=url.password)
-# conn.set('answer', 42)
-# conn.get('answer')
+conn.set('answer', 42)
+conn.get('answer')
 
 
 if __name__ == '__main__':
