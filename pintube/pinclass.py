@@ -128,50 +128,51 @@ class Pintube(object):
                 p_feed = self.user_playlist_feed
             else:
                 self.user_playlist_feed = self.get_user_playlist_feed()
-                p_feed = self.user_playlist_feed
+                if self.user_playlist_feed is not None:
+                    p_feed = self.user_playlist_feed
 
-            for p_entry in p_feed.entry:
-                p_id = p_entry.id.text.split('/')[-1]
-                p_title = p_entry.title.text
-                v_feed = self.get_playlist_video_feed(p_id)
-                videos = {}
-                i = 0
-                print ""
-                print "_"*30
-                print "Your Youtube Account has a playlist \
-                [%s] with id [%s] ->" % (p_title, p_id)
-
-
-                for v_entry in v_feed.entry:
-                    v_title = v_entry.title.text
-                    v_uri = v_entry.id.text
-
-                    try:
-                        video_entry = self.get_video_entry(video_uri=v_uri)
-                    except RequestError, error:
-                        print error
-                        print "Video Entry Error!"
-                        continue
+                    for p_entry in p_feed.entry:
+                        p_id = p_entry.id.text.split('/')[-1]
+                        p_title = p_entry.title.text
+                        v_feed = self.get_playlist_video_feed(p_id)
+                        videos = {}
+                        i = 0
+                        print ""
+                        print "_"*30
+                        print "Your Youtube Account has a playlist \
+                        [%s] with id [%s] ->" % (p_title, p_id)
 
 
-                    i += 1
-                    video_data = {}
+                        for v_entry in v_feed.entry:
+                            v_title = v_entry.title.text
+                            v_uri = v_entry.id.text
 
-                    if video_entry.media.player is not None:
-                        media_url = video_entry.media.player.url
-                        media_url = re.search(self.video_url_pattern, media_url).group(0)
-                        video_data = {"video_url": media_url, "video_uri": v_uri}
-                    else:
-                        video_data = {"video_url": None, "video_uri": v_uri}
+                            try:
+                                video_entry = self.get_video_entry(video_uri=v_uri)
+                            except RequestError, error:
+                                print error
+                                print "Video Entry Error!"
+                                continue
 
-                    videos.setdefault(v_title, video_data)
 
-                print "Playlist [%s] has [%s] videos" % (p_title, i)
-                print ""
-                print "_"*30
+                            i += 1
+                            video_data = {}
 
-                playlist = {"number_of_vids": i, "videos": videos}
-                playlists.setdefault(p_title, playlist)
+                            if video_entry.media.player is not None:
+                                media_url = video_entry.media.player.url
+                                media_url = re.search(self.video_url_pattern, media_url).group(0)
+                                video_data = {"video_url": media_url, "video_uri": v_uri}
+                            else:
+                                video_data = {"video_url": None, "video_uri": v_uri}
+
+                            videos.setdefault(v_title, video_data)
+
+                        print "Playlist [%s] has [%s] videos" % (p_title, i)
+                        print ""
+                        print "_"*30
+
+                        playlist = {"number_of_vids": i, "videos": videos}
+                        playlists.setdefault(p_title, playlist)
 
             print ""
             print "_"*30
@@ -188,6 +189,8 @@ class Pintube(object):
         vid_id = self.get_video_id(video_url)
         if self.user_playlist_feed is None:
             self.user_playlist_feed = self.get_user_playlist_feed()
+            if self.user_playlist_feed is None:
+                return False
 
         p_exist = self.does_playlist_exist(user_playlist_feed=self.user_playlist_feed, playlist_name=playlist_name)  # user_playlist_name)
         if p_exist["exist"]:
@@ -207,6 +210,7 @@ class Pintube(object):
             except RequestError, error:
                 print error
                 print "Adding Video to A New Playlist Did Not Work"
+        return True
 
 
 
@@ -225,6 +229,8 @@ class Pintube(object):
 
         if self.user_playlist_feed is None:
             self.user_playlist_feed = self.get_user_playlist_feed()
+            if self.user_playlist_feed is None:
+                return False
 
         p_exist = self.does_playlist_exist(user_playlist_feed=self.user_playlist_feed, playlist_name=new_playlist_name)
         new_playlist_video_feed = None
@@ -257,6 +263,7 @@ class Pintube(object):
                     print error
                     print "CP Adding Video To Playlist Error!"
                     continue
+        return True
 
 
 
@@ -409,7 +416,12 @@ class Pintube(object):
         """
         Returns a user's playlist feed
         """
-        return self.youtube_service.GetYouTubePlaylistFeed(username='default')
+        try:
+            pfeed = self.youtube_service.GetYouTubePlaylistFeed(username='default')
+        except RequestError, error:
+            print error
+            return None
+        return pfeed
 
 
     def get_playlist_video_feed(self, playlist_id):

@@ -64,13 +64,11 @@ def pinboard_login():
     """
     View to Pinboard Login
     """
-
     try:
         global HAS_PINBOARD
         global HAS_YOUTUBE
         global PINTUBE_OBJECT
         form = Pinboard_Login_Form()
-
 
         if form.validate_on_submit():
             session['pin_remember_me'] = form.pin_remember_me.data
@@ -117,11 +115,12 @@ def index():
         """
         print "Playlist URL is %s" % original_playlist_url
         print "Playlist Name is %s" % new_playlist_name
-        PINTUBE_OBJECT.copy_playlist_to(original_playlist_url,
-                                        new_playlist_name)
+        copied_playlist = PINTUBE_OBJECT.copy_playlist_to(original_playlist_url, new_playlist_name)
         print "Copied Playlist"
-        obj_response.alert('Copied to new playlist with name '
-                           + new_playlist_name)
+        if copied_playlist:
+            obj_response.alert('Copied to new playlist with name ' + new_playlist_name)
+        else:
+            obj_response.alert("Please refresh the page and sign in again")
 
 
     def add_video_to_playlists(obj_response, video_url, video_name, p_name, last_one):
@@ -130,12 +129,14 @@ def index():
         """
         print "Video URL is %s" % video_url
         print "Playlist Name is %s" % p_name
-        PINTUBE_OBJECT.add_video_to_possible_playlists(video_url,
-                                                        playlist_name=p_name)
+        video_added = PINTUBE_OBJECT.add_video_to_possible_playlists(video_url, playlist_name=p_name)
         print "Added Video to Playlist {0}".format(p_name)
         if last_one == "True":
             finished = "Added video [{0}] to playlist [{1}]".format(video_name, p_name)
-            obj_response.alert(finished)
+            if video_added:
+                obj_response.alert(finished)
+            else:
+                obj_response.alert("Please refresh the page and sign in again")
 
     if g.sijax.is_sijax_request:
         g.sijax.register_callback('copy_playlist', copy_playlist)
